@@ -1,0 +1,6 @@
+{
+  "name": "Voxpin - Plataforma de Encuestas Geolocalizadas",
+  "description": "Plataforma SaaS para mapear opiniones, intención de voto y datos de mercado con geolocalización de pines, clustering familiar, personalización dinámica y dashboard en tiempo real.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
