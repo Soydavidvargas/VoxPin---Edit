@@ -3,35 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { PageLoader } from './components/PageLoader';
+import { ThreeBackground } from './components/ThreeBackground';
 import { LandingNavbar } from './components/landing/LandingNavbar';
 import { HeroSection } from './components/landing/HeroSection';
 import { FlowSection } from './components/landing/FlowSection';
 import { ModulesSection } from './components/landing/ModulesSection';
-import { DashboardShowcaseSection } from './components/landing/DashboardShowcaseSection';
 import { PlansSection } from './components/landing/PlansSection';
-import { ArchitectureSection } from './components/landing/ArchitectureSection';
 import { LandingFooter } from './components/landing/LandingFooter';
+import { SkeletonProvider, useSkeleton } from './context/SkeletonContext';
+import { AuthPage, UserSession } from './components/auth/AuthPage';
+import { CheckCircle2 } from 'lucide-react';
 
-export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [loadProgress, setLoadProgress] = useState(0);
-
-  // Monochrome field terminal initialization sequence
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setLoadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(() => setLoading(false), 250);
-          return 100;
-        }
-        return prev + 25;
-      });
-    }, 100);
-
-    return () => clearInterval(timer);
-  }, []);
+function AppContent() {
+  const [showLoader, setShowLoader] = useState(true);
+  const [currentView, setCurrentView] = useState<'landing' | 'auth' | 'workspace'>('landing');
+  const [authInitialMode, setAuthInitialMode] = useState<'login' | 'register'>('login');
+  const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { simulateLoading } = useSkeleton();
 
   const handleExploreClick = () => {
     const element = document.getElementById('flujo');
@@ -40,76 +31,137 @@ export default function App() {
     }
   };
 
-  if (loading) {
+  const handleLoaderComplete = () => {
+    setShowLoader(false);
+    // Smooth 1.2s skeleton hydration right after initial starry deep space loader
+    simulateLoading(1200);
+  };
+
+  const handleOpenAuth = (mode: 'login' | 'register' = 'login') => {
+    setAuthInitialMode(mode);
+    setCurrentView('auth');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleLoginSuccess = (user: UserSession) => {
+    setCurrentUser(user);
+    setCurrentView('workspace');
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentView('landing');
+    setToastMessage('Has cerrado sesión correctamente.');
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3500);
+  };
+
+  // If in Auth View
+  if (currentView === 'auth') {
     return (
-      <div className="fixed inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center z-50 p-4 font-mono text-white">
-        <div className="relative flex flex-col items-center max-w-xs w-full text-center space-y-5">
-          
-          {/* Monochromatic Marker */}
-          <div className="relative flex items-center justify-center">
-            <div className="w-12 h-12 rounded-[3.6px] bg-[#141414] border-2 border-white flex items-center justify-center">
-              <span className="w-3 h-3 bg-white rounded-[1px] animate-pulse" />
-            </div>
-            <div className="absolute -inset-2 rounded-[3.6px] border border-white/20 animate-ping pointer-events-none" />
-          </div>
+      <>
+        <ThreeBackground />
+        <AuthPage
+          initialMode={authInitialMode}
+          onBackToLanding={() => setCurrentView('landing')}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      </>
+    );
+  }
 
-          <div>
-            <h1 className="text-xl font-normal font-sans tracking-[-0.03em] text-white uppercase">
-              Voxpin
-            </h1>
-            <p className="text-[11px] text-[#8a8a8a] uppercase tracking-wider mt-1">
-              [INICIALIZANDO MOTOR GEO // POSTGIS]
-            </p>
+  // After registration / login: pure white screen with black text "Hay que hacerlo funcional"
+  if (currentView === 'workspace' && currentUser) {
+    return (
+      <div className="min-h-screen w-full bg-white text-black flex flex-col items-center justify-center p-6 selection:bg-black selection:text-white relative">
+        {/* Subtle navigation links */}
+        <div className="absolute top-6 left-6 right-6 flex items-center justify-between font-mono text-xs text-neutral-500">
+          <button
+            onClick={() => setCurrentView('landing')}
+            className="hover:text-black underline cursor-pointer"
+          >
+            ← Volver al inicio
+          </button>
+          <div className="flex items-center gap-4">
+            <span className="text-neutral-400">Usuario: {currentUser.name}</span>
+            <button
+              onClick={handleLogout}
+              className="hover:text-black underline cursor-pointer font-bold"
+            >
+              Cerrar sesión
+            </button>
           </div>
+        </div>
 
-          {/* Progress bar in Pure White */}
-          <div className="w-full bg-[#141414] h-1.5 rounded-[1px] overflow-hidden border border-[#2e2e2e]">
-            <div 
-              className="h-full bg-white transition-all duration-200"
-              style={{ width: `${loadProgress}%` }}
-            />
-          </div>
-
-          <div className="flex items-center justify-between w-full text-[10px] text-[#8a8a8a]">
-            <span>STATUS: SATELLITE</span>
-            <span className="text-white font-bold">{loadProgress}%</span>
-          </div>
-
+        {/* Requested text: "Hay que hacerlo funcional" */}
+        <div className="text-center space-y-4 max-w-2xl">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-black leading-tight">
+            Hay que hacerlo funcional
+          </h1>
         </div>
       </div>
     );
   }
 
+  // Default: Landing Page View
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-white selection:text-black flex flex-col antialiased">
+    <div className="relative min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-white selection:text-black flex flex-col antialiased">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-20 right-4 z-50 bg-[#121212] border border-white/30 text-white px-4 py-2.5 rounded-[3.6px] font-mono text-xs flex items-center gap-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.8)] animate-in fade-in slide-in-from-top-2">
+          <CheckCircle2 className="w-4 h-4 text-white" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Cinematic Starry Deep Space Loading Screen */}
+      {showLoader && (
+        <PageLoader
+          minDurationMs={2200}
+          onLoaded={handleLoaderComplete}
+        />
+      )}
       
-      {/* Sticky Header */}
-      <LandingNavbar />
+      {/* Three.js Interactive Dispersing Particle Background */}
+      <ThreeBackground />
+
+      {/* Sticky Header with Conocer Plataforma / Auth Action */}
+      <LandingNavbar
+        onOpenAuth={() => handleOpenAuth('login')}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        onOpenWorkspace={() => setCurrentView('workspace')}
+      />
 
       {/* Main Landing Page Flow */}
-      <main className="flex-1">
+      <main className="relative z-10 flex-1">
         {/* 1. Header HERO con PIN mostrando información */}
         <HeroSection onExploreClick={handleExploreClick} />
 
         {/* 2. El Flujo en una imagen */}
         <FlowSection />
 
-        {/* 3. Los 4 Módulos de la plataforma */}
+        {/* 3. Carrusel Interactivo: Cómo funciona la plataforma (Paso a paso) */}
         <ModulesSection />
 
-        {/* 4. Dashboard & Estadísticas en tiempo real */}
-        <DashboardShowcaseSection />
-
-        {/* 5. Modelo de Negocio, Suscripciones & Verificación */}
+        {/* 4. Modelo de Negocio, Suscripciones & Verificación */}
         <PlansSection />
-
-        {/* 6. Arquitectura Técnica PostgreSQL + PostGIS */}
-        <ArchitectureSection />
       </main>
 
       {/* Footer Final */}
-      <LandingFooter />
-
+      <div className="relative z-10">
+        <LandingFooter />
+      </div>
     </div>
   );
 }
+
+export default function App() {
+  return (
+    <SkeletonProvider>
+      <AppContent />
+    </SkeletonProvider>
+  );
+}
+

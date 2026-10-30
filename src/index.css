@@ -52,55 +52,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Custom Leaflet Map in Monochrome */
-.leaflet-container {
-  background-color: #0a0a0a !important;
-  font-family: 'JetBrains Mono', monospace;
-  outline: none;
-  filter: grayscale(100%) contrast(120%);
-}
-
-.leaflet-bar {
-  border: 1px solid #2e2e2e !important;
-  box-shadow: none !important;
-  border-radius: 3.6px !important;
-  overflow: hidden;
-}
-
-.leaflet-bar a {
-  background-color: #141414 !important;
-  color: #8a8a8a !important;
-  border-bottom: 1px solid #2e2e2e !important;
-}
-
-.leaflet-bar a:hover {
-  background-color: #2e2e2e !important;
-  color: #ffffff !important;
-}
-
-.leaflet-popup-content-wrapper {
-  background: #141414 !important;
-  color: #ffffff !important;
-  border: 1px solid #2e2e2e !important;
-  border-radius: 3.6px !important;
-  box-shadow: none !important;
-  padding: 4px !important;
-}
-
-.leaflet-popup-tip {
-  background: #141414 !important;
-  border: 1px solid #2e2e2e !important;
-}
-
-.leaflet-popup-close-button {
-  color: #8a8a8a !important;
-  padding: 6px !important;
-}
-
-.leaflet-popup-close-button:hover {
-  color: #ffffff !important;
-}
-
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 5px;
@@ -118,4 +69,49 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #525252;
+}
+
+/* Skeleton Shimmer Animations */
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-color: #141414;
+}
+
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.03) 75%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+.skeleton-shimmer-ambient {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.02) 0%,
+    transparent 70%
+  );
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

@@ -5,8 +5,13 @@ import {
   BarChart3, 
   FileSpreadsheet
 } from 'lucide-react';
+import { ScrollReveal } from '../ui/ScrollReveal';
+import { useSkeleton } from '../../context/SkeletonContext';
+import { Skeleton, SkeletonBadge } from '../ui/Skeleton';
 
 export const FlowSection: React.FC = () => {
+  const { isSkeleton } = useSkeleton();
+
   const steps = [
     {
       num: '01',
@@ -43,24 +48,37 @@ export const FlowSection: React.FC = () => {
   ];
 
   return (
-    <section id="flujo" className="py-24 border-b border-[#2e2e2e] relative bg-[#0a0a0a]">
+    <section id="flujo" className="py-24 border-b border-[#2e2e2e] relative bg-transparent">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
         
-        {/* Section Header from Page 2 of PDF */}
-        <div className="max-w-3xl mb-16">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-[3.6px] bg-white text-black font-mono text-[11px] font-bold tracking-wider uppercase mb-4">
-            VISIÓN GENERAL · PÁGINA 2
-          </div>
-          <h2 className="text-4xl sm:text-5xl font-normal text-white tracking-[-0.03em] leading-[0.95]">
-            De una idea de voto a una plataforma completa
-          </h2>
-          <p className="text-base sm:text-[18px] text-[#d4d4d4] mt-4 leading-[1.62] tracking-[-0.03em] max-w-2xl">
-            El punto de partida fue una necesidad concreta: contar con una herramienta eficiente que permita mapear la intención de voto. Al escalar la idea, el objetivo real pasó a ser un <strong className="text-white font-medium">aplicativo web y móvil de encuestas geolocalizadas, altamente personalizable</strong>.
-          </p>
-        </div>
+        {/* Section Header */}
+        <ScrollReveal delay={0} className="max-w-3xl mb-16">
+          {isSkeleton ? (
+            <div className="space-y-4">
+              <SkeletonBadge width={180} />
+              <Skeleton className="h-10 sm:h-12 w-4/5 rounded-[3.6px]" />
+              <div className="space-y-2 pt-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-10/12" />
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-[3.6px] bg-white text-black font-mono text-[11px] font-bold tracking-wider uppercase mb-4">
+                VISIÓN GENERAL · PÁGINA 2
+              </div>
+              <h2 className="text-4xl sm:text-5xl font-normal text-white tracking-[-0.03em] leading-[0.95]">
+                De una idea de voto a una plataforma completa
+              </h2>
+              <p className="text-base sm:text-[18px] text-[#d4d4d4] mt-4 leading-[1.62] tracking-[-0.03em] max-w-2xl">
+                El punto de partida fue una necesidad concreta: contar con una herramienta eficiente que permita mapear la intención de voto. Al escalar la idea, el objetivo real pasó a ser un <strong className="text-white font-medium">aplicativo web y móvil de encuestas geolocalizadas, altamente personalizable</strong>.
+              </p>
+            </>
+          )}
+        </ScrollReveal>
 
-        {/* EL FLUJO EN UNA IMAGEN (Page 2) */}
-        <div className="mb-6 flex items-center justify-between border-b border-[#2e2e2e] pb-3">
+        {/* EL FLUJO EN UNA IMAGEN Header */}
+        <ScrollReveal delay={100} className="mb-6 flex items-center justify-between border-b border-[#2e2e2e] pb-3">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 bg-white rounded-[1px]" />
             <span className="font-mono text-xs font-bold uppercase tracking-wider text-white">
@@ -70,48 +88,82 @@ export const FlowSection: React.FC = () => {
           <span className="font-mono text-xs text-[#8a8a8a] hidden sm:inline">
             // TELEMETRÍA DE CAMPO A DECISIÓN ESTRATÉGICA
           </span>
-        </div>
+        </ScrollReveal>
 
-        {/* 4 Steps Grid (Strictly Monochrome) */}
+        {/* 4 Steps Grid (Live or Skeleton) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           
-          {steps.map((step) => {
-            const Icon = step.icon;
-            return (
-              <div
+          {isSkeleton ? (
+            /* SKELETON WIREFRAME FOR THE 4 CARDS */
+            steps.map((step, idx) => (
+              <div 
                 key={step.num}
-                className="relative rounded-[3.6px] bg-[#141414] border border-[#2e2e2e] p-6 hover:border-white transition-colors flex flex-col justify-between"
+                className="relative rounded-[3.6px] bg-[#141414] border border-[#2e2e2e] p-6 flex flex-col justify-between h-full skeleton-shimmer min-h-[300px]"
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <span className="font-mono text-2xl font-light text-white">
-                      {step.num}
-                    </span>
-                    <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-[3.6px] border border-[#2e2e2e] text-[#8a8a8a]">
-                      {step.badge}
-                    </span>
+                    <Skeleton className="h-8 w-12 rounded-[3.6px]" />
+                    <SkeletonBadge width={60} />
                   </div>
 
-                  <h3 className="text-xl font-normal text-white tracking-[-0.03em] mb-1">
-                    {step.title}
-                  </h3>
-                  
-                  <div className="font-mono text-[11px] text-[#d4d4d4] uppercase tracking-wider mb-4">
-                    {step.tag}
-                  </div>
+                  <Skeleton className="h-6 w-3/4 mb-3 rounded-[3.6px]" />
+                  <Skeleton className="h-3.5 w-1/2 mb-5 rounded-[3.6px]" />
 
-                  <p className="text-sm text-[#8a8a8a] leading-[1.6]">
-                    {step.desc}
-                  </p>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3.5 w-full" />
+                    <Skeleton className="h-3.5 w-11/12" />
+                    <Skeleton className="h-3.5 w-4/5" />
+                  </div>
                 </div>
 
-                <div className="pt-6 mt-6 border-t border-[#2e2e2e] flex items-center justify-between font-mono text-[11px] text-[#8a8a8a]">
-                  <span>FASE {step.num}</span>
-                  <Icon className="w-4 h-4 text-[#8a8a8a]" />
+                <div className="pt-6 mt-6 border-t border-[#222] flex items-center justify-between">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-4 w-4 rounded-full" />
                 </div>
               </div>
-            );
-          })}
+            ))
+          ) : (
+            steps.map((step, idx) => {
+              const Icon = step.icon;
+              return (
+                <ScrollReveal
+                  key={step.num}
+                  delay={idx * 120}
+                  className="h-full"
+                >
+                  <div className="relative rounded-[3.6px] bg-[#141414] border border-[#2e2e2e] p-6 hover:border-white transition-colors flex flex-col justify-between h-full">
+                    <div>
+                      <div className="flex items-center justify-between mb-6">
+                        <span className="font-mono text-2xl font-light text-white">
+                          {step.num}
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-[3.6px] border border-[#2e2e2e] text-[#8a8a8a]">
+                          {step.badge}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl font-normal text-white tracking-[-0.03em] mb-1">
+                        {step.title}
+                      </h3>
+                      
+                      <div className="font-mono text-[11px] text-[#d4d4d4] uppercase tracking-wider mb-4">
+                        {step.tag}
+                      </div>
+
+                      <p className="text-sm text-[#8a8a8a] leading-[1.6]">
+                        {step.desc}
+                      </p>
+                    </div>
+
+                    <div className="pt-6 mt-6 border-t border-[#2e2e2e] flex items-center justify-between font-mono text-[11px] text-[#8a8a8a]">
+                      <span>FASE {step.num}</span>
+                      <Icon className="w-4 h-4 text-[#8a8a8a]" />
+                    </div>
+                  </div>
+                </ScrollReveal>
+              );
+            })
+          )}
 
         </div>
 
@@ -119,3 +171,4 @@ export const FlowSection: React.FC = () => {
     </section>
   );
 };
+
