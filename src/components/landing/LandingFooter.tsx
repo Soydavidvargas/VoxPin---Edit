@@ -1,12 +1,7 @@
 import React from 'react';
-import { ArrowUp } from 'lucide-react';
 import { ScrollReveal } from '../ui/ScrollReveal';
 
 export const LandingFooter: React.FC = () => {
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <footer className="bg-transparent border-t border-[#2e2e2e] pt-16 pb-12 font-mono text-[13px] text-[#8a8a8a]">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
@@ -20,17 +15,13 @@ export const LandingFooter: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-white rounded-[1px] rotate-45 inline-block" />
                 <span className="text-xl font-bold tracking-[-0.03em] text-white font-sans uppercase">
-                  Voxpin
+                  Votality
                 </span>
               </div>
 
               <p className="text-xs text-[#8a8a8a] leading-[1.6] max-w-sm font-mono">
                 // Plataforma SaaS para mapear opiniones, intención de voto y datos de mercado: cada persona encuestada es un pin en el mapa, y cada pin alimenta estadísticas en tiempo real.
               </p>
-
-              <div className="text-[11px] text-[#525252] pt-1">
-                [PROPUESTA TÉCNICA · WEB + MÓVIL · EVALUACIÓN & COTIZACIÓN]
-              </div>
             </div>
 
             {/* Architecture & Navigation Links */}
@@ -71,17 +62,7 @@ export const LandingFooter: React.FC = () => {
         {/* Sub-footer */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8a8a8a]">
           <div>
-            © {new Date().getFullYear()} VOXPIN // SISTEMA GEOESPACIAL NEUTRAL.
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={scrollToTop}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[3.6px] bg-[#141414] text-white hover:text-black hover:bg-white border border-[#2e2e2e] transition-colors cursor-pointer"
-            >
-              <span>SUBIR AL INICIO</span>
-              <ArrowUp className="w-3.5 h-3.5" />
-            </button>
+            © {new Date().getFullYear()} VOTALITY // SISTEMA GEOESPACIAL NEUTRAL.
           </div>
         </div>
 

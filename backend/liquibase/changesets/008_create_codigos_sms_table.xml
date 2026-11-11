@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="008-create-codigos-sms-table" author="votality-architect">
+        <comment>Creación de tabla de códigos de verificación SMS OTP (6 dígitos)</comment>
+
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_codigos_sms (
+                id BIGSERIAL PRIMARY KEY,
+                telefono VARCHAR(20) NOT NULL,
+                codigo VARCHAR(6) NOT NULL,
+                motivo VARCHAR(20) NOT NULL,
+                creado_el TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                expira_el TIMESTAMP WITH TIME ZONE NOT NULL,
+                usado BOOLEAN NOT NULL DEFAULT FALSE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_codigos_sms_telefono ON votality_codigos_sms(telefono);
+            CREATE INDEX IF NOT EXISTS idx_codigos_sms_telefono_motivo ON votality_codigos_sms(telefono, motivo);
+            CREATE INDEX IF NOT EXISTS idx_codigos_sms_usado_expira ON votality_codigos_sms(usado, expira_el);
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql" endDelimiter=";">
+                DROP TABLE IF EXISTS votality_codigos_sms;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
+

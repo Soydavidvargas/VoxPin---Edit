@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="007-create-invitaciones-single-use-table" author="votality-architect">
+        <comment>Creación de tabla de enlaces de invitación de un solo uso (Single-Use Tokens)</comment>
+
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_invitaciones_encuestadores (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                token VARCHAR(128) UNIQUE NOT NULL,
+                campana_id UUID NOT NULL REFERENCES votality_campanas(id) ON DELETE CASCADE,
+                creada_por_id UUID NOT NULL REFERENCES votality_usuarios(id) ON DELETE CASCADE,
+                usada BOOLEAN NOT NULL DEFAULT FALSE,
+                usada_por_id UUID REFERENCES votality_usuarios(id) ON DELETE SET NULL,
+                nombre_encuestador VARCHAR(200),
+                creada_el TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                usada_el TIMESTAMP WITH TIME ZONE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_invitacion_token ON votality_invitaciones_encuestadores(token);
+            CREATE INDEX IF NOT EXISTS idx_invitacion_campana_fecha ON votality_invitaciones_encuestadores(campana_id, creada_el DESC);
+            CREATE INDEX IF NOT EXISTS idx_invitacion_usada ON votality_invitaciones_encuestadores(usada);
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql" endDelimiter=";">
+                DROP TABLE IF EXISTS votality_invitaciones_encuestadores;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
+

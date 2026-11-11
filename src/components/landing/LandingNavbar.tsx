@@ -27,7 +27,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 bg-white rounded-[1px] rotate-45 inline-block shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.7)]" />
             <span className="text-xl font-bold tracking-[-0.03em] text-white font-sans uppercase">
-              Voxpin
+              Votality
             </span>
           </div>
           <span className="hidden sm:inline-block font-mono text-[11px] text-[#8a8a8a] tracking-wider uppercase border-l border-[#2e2e2e] pl-3 py-0.5">
@@ -35,9 +35,9 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
           </span>
         </div>
 
-        {/* Right Navigation Actions */}
+        {/* Right Navigation Actions (Solo visible si ya hay una sesión activa) */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {currentUser ? (
+          {currentUser && (
             /* Logged-In User Actions */
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-[3.6px] bg-[#141414] border border-[#2e2e2e] font-mono text-xs">
@@ -67,15 +67,6 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
                 </button>
               )}
             </div>
-          ) : (
-            /* Botón "Conocer plataforma" -> Abre Login / Registro */
-            <button
-              onClick={onOpenAuth}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-[3.6px] bg-white hover:bg-[#e0e0e0] text-black font-mono text-[13px] font-bold tracking-wider uppercase transition-colors cursor-pointer shadow-[0_0_15px_rgba(255,255,255,0.15)]"
-            >
-              <span>Conocer plataforma</span>
-              <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            </button>
           )}
         </div>
 

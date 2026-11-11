@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="005-colombia-geodata-tables-and-indexes" author="votality-architect">
+        <comment>Creación de tablas territoriales de Colombia, localidades, comunas, barrios, malla vial e índices GIST/GIN</comment>
+
+        <!-- 1. Extensión pg_trgm para búsquedas trigram ultra-rápidas -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE EXTENSION IF NOT EXISTS pg_trgm;
+        </sql>
+
+        <!-- 2. Departamentos (32 + Bogotá D.C.) -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_departamentos (
+                id SERIAL PRIMARY KEY,
+                dane_code VARCHAR(5) UNIQUE NOT NULL,
+                nombre VARCHAR(150) NOT NULL,
+                geometria geometry(MultiPolygon, 4326) NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_depto_geom_gist ON votality_departamentos USING GIST (geometria);
+            CREATE INDEX IF NOT EXISTS idx_depto_nombre_gin ON votality_departamentos USING GIN (nombre gin_trgm_ops);
+        </sql>
+
+        <!-- 3. Municipios (1.122 Municipios DANE) -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_municipios (
+                id SERIAL PRIMARY KEY,
+                dane_code VARCHAR(10) UNIQUE NOT NULL,
+                nombre VARCHAR(150) NOT NULL,
+                departamento_id INTEGER NOT NULL REFERENCES votality_departamentos(id) ON DELETE CASCADE,
+                geometria geometry(MultiPolygon, 4326) NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_muni_geom_gist ON votality_municipios USING GIST (geometria);
+            CREATE INDEX IF NOT EXISTS idx_muni_nombre_gin ON votality_municipios USING GIN (nombre gin_trgm_ops);
+        </sql>
+
+        <!-- 4. Localidades de Bogotá (20) y Comunas Urbanas -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_localidades_comunas (
+                id SERIAL PRIMARY KEY,
+                codigo VARCHAR(20) NOT NULL,
+                nombre VARCHAR(150) NOT NULL,
+                tipo VARCHAR(30) DEFAULT 'LOCALIDAD',
+                municipio_id INTEGER NOT NULL REFERENCES votality_municipios(id) ON DELETE CASCADE,
+                geometria geometry(MultiPolygon, 4326) NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_loc_com_geom_gist ON votality_localidades_comunas USING GIST (geometria);
+            CREATE INDEX IF NOT EXISTS idx_loc_com_nombre_gin ON votality_localidades_comunas USING GIN (nombre gin_trgm_ops);
+        </sql>
+
+        <!-- 5. Malla Vial (LineString) para ST_Intersection -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_vias (
+                id BIGSERIAL PRIMARY KEY,
+                nombre VARCHAR(150) NOT NULL,
+                tipo_via VARCHAR(50) NOT NULL,
+                numero_via VARCHAR(20) NOT NULL,
+                municipio_id INTEGER NOT NULL REFERENCES votality_municipios(id) ON DELETE CASCADE,
+                geom geometry(LineString, 4326) NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_via_geom_gist ON votality_vias USING GIST (geom);
+            CREATE INDEX IF NOT EXISTS idx_via_nombre_gin ON votality_vias USING GIN (nombre gin_trgm_ops);
+        </sql>
+
+        <!-- 6. Barrios y Referencias Urbanas -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_barrios (
+                id BIGSERIAL PRIMARY KEY,
+                codigo VARCHAR(30),
+                nombre VARCHAR(150) NOT NULL,
+                municipio_id INTEGER NOT NULL REFERENCES votality_municipios(id) ON DELETE CASCADE,
+                localidad_comuna_id INTEGER REFERENCES votality_localidades_comunas(id) ON DELETE SET NULL,
+                punto_referencia geography(Point, 4326),
+                geometria geometry(MultiPolygon, 4326)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_barrio_punto_gist ON votality_barrios USING GIST (punto_referencia);
+            CREATE INDEX IF NOT EXISTS idx_barrio_nombre_gin ON votality_barrios USING GIN (nombre gin_trgm_ops);
+        </sql>
+
+        <!-- 7. Direcciones de Referencia / Vías para Geocodificador -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_direcciones_referencia (
+                id BIGSERIAL PRIMARY KEY,
+                texto_busqueda VARCHAR(255) NOT NULL,
+                municipio_id INTEGER NOT NULL REFERENCES votality_municipios(id) ON DELETE CASCADE,
+                punto geography(Point, 4326) NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_dir_punto_gist ON votality_direcciones_referencia USING GIST (punto);
+            CREATE INDEX IF NOT EXISTS idx_dir_busqueda_gin ON votality_direcciones_referencia USING GIN (texto_busqueda gin_trgm_ops);
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql" endDelimiter=";">
+                DROP TABLE IF EXISTS votality_direcciones_referencia CASCADE;
+                DROP TABLE IF EXISTS votality_barrios CASCADE;
+                DROP TABLE IF EXISTS votality_vias CASCADE;
+                DROP TABLE IF EXISTS votality_localidades_comunas CASCADE;
+                DROP TABLE IF EXISTS votality_municipios CASCADE;
+                DROP TABLE IF EXISTS votality_departamentos CASCADE;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
+

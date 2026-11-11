@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Tablas: Usuarios, Campañas y Sectores Censales -->
+    <changeSet id="002-create-core-tables" author="votality-architect">
+        <!-- Sectores Censales DANE -->
+        <createTable tableName="votality_census_sectors">
+            <column name="id" type="VARCHAR(50)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dane_code" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="department" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="municipality" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_population" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sample_goal" type="INT" defaultValueNumeric="500">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Campañas -->
+        <createTable tableName="votality_campaigns">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="owner_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="plan_tier" type="VARCHAR(20)" defaultValue="COMUNAL">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unique_invite_token" type="VARCHAR(128)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Usuarios con Sesión Única -->
+        <createTable tableName="votality_users">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(150)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(254)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(20)" defaultValue="FREE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone_number" type="VARCHAR(20)"/>
+            <column name="active_session_token" type="VARCHAR(255)"/>
+            <column name="assigned_campaign_id" type="UUID">
+                <constraints foreignKeyName="fk_user_campaign" references="votality_campaigns(id)"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <!-- Clave Foránea de Campaña a Owner -->
+        <addForeignKeyConstraint
+            baseTableName="votality_campaigns"
+            baseColumnNames="owner_id"
+            constraintName="fk_campaign_owner"
+            referencedTableName="votality_users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog>
+

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="006-multi-tenant-territorial-campaign-tables" author="votality-architect">
+        <comment>Creación de tablas multi-tenant por alcance territorial: Usuario, TipoPlan, Campana, AsignacionEncuestador y Encuesta</comment>
+
+        <!-- 1. Catálogo de Tipos de Planes Territoriales -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_tipos_planes (
+                id SERIAL PRIMARY KEY,
+                codigo VARCHAR(20) UNIQUE NOT NULL,
+                nombre VARCHAR(100) NOT NULL,
+                descripcion TEXT DEFAULT '',
+                limite_encuestadores INT NOT NULL DEFAULT 15,
+                limite_encuestas INT NOT NULL DEFAULT 1000
+            );
+
+            INSERT INTO votality_tipos_planes (codigo, nombre, descripcion, limite_encuestadores, limite_encuestas)
+            VALUES 
+                ('FREE', 'Plan Gratuito / Prueba', 'Plan exploratorio para pruebas de campo', 0, 100),
+                ('COMUNAL', 'Campaña Comunal / JAL', 'Cobertura para comunas urbanas, corregimientos o JAL', 15, 1000),
+                ('MUNICIPAL', 'Alcaldía / Concejo Municipal', 'Cobertura para cabeceras municipales y concejos', 50, 10000),
+                ('DEPARTAMENTAL', 'Gobernación / Asamblea', 'Cobertura departamental para asambleas y gobernaciones', 200, 50000)
+            ON CONFLICT (codigo) DO UPDATE 
+            SET nombre = EXCLUDED.nombre,
+                limite_encuestadores = EXCLUDED.limite_encuestadores,
+                limite_encuestas = EXCLUDED.limite_encuestas;
+        </sql>
+
+        <!-- 2. Usuarios Base del Sistema -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_usuarios (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                username VARCHAR(150) UNIQUE NOT NULL,
+                password VARCHAR(128) NOT NULL,
+                email VARCHAR(254) NOT NULL DEFAULT '',
+                first_name VARCHAR(150) NOT NULL DEFAULT '',
+                last_name VARCHAR(150) NOT NULL DEFAULT '',
+                rol VARCHAR(20) NOT NULL DEFAULT 'ENCUESTADOR',
+                telefono VARCHAR(20),
+                active_session_token VARCHAR(255),
+                is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                is_staff BOOLEAN NOT NULL DEFAULT FALSE,
+                is_superuser BOOLEAN NOT NULL DEFAULT FALSE,
+                last_login TIMESTAMP WITH TIME ZONE,
+                date_joined TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_votality_usuarios_rol ON votality_usuarios(rol);
+        </sql>
+
+        <!-- 3. Entorno de Campaña (Perfil del Cliente) -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_campanas (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                nombre VARCHAR(150) NOT NULL,
+                tipo_plan_id INT NOT NULL REFERENCES votality_tipos_planes(id) ON DELETE RESTRICT,
+                administrador_id UUID UNIQUE NOT NULL REFERENCES votality_usuarios(id) ON DELETE CASCADE,
+                departamento_id INT,
+                municipio_id INT,
+                comuna_localidad_id INT,
+                perimetro_geografico geometry(MultiPolygon, 4326),
+                activa BOOLEAN NOT NULL DEFAULT TRUE,
+                creada_el TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_votality_campanas_perimetro_gist 
+            ON votality_campanas USING GIST (perimetro_geografico);
+        </sql>
+
+        <!-- 4. Asignación de Encuestadores a Campañas (Aislamiento y control de cupo) -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_asignaciones_encuestadores (
+                id BIGSERIAL PRIMARY KEY,
+                encuestador_id UUID NOT NULL REFERENCES votality_usuarios(id) ON DELETE CASCADE,
+                campana_id UUID NOT NULL REFERENCES votality_campanas(id) ON DELETE CASCADE,
+                activo BOOLEAN NOT NULL DEFAULT TRUE,
+                fecha_asignacion TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT uq_asignacion_encuestador_campana UNIQUE (encuestador_id, campana_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_asig_encuestador ON votality_asignaciones_encuestadores(encuestador_id);
+            CREATE INDEX IF NOT EXISTS idx_asig_campana ON votality_asignaciones_encuestadores(campana_id);
+        </sql>
+
+        <!-- 5. Encuestas / Pines de Campo con PostGIS PointField e Inmutabilidad -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE IF NOT EXISTS votality_encuestas (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                campana_id UUID NOT NULL REFERENCES votality_campanas(id) ON DELETE CASCADE,
+                encuestador_id UUID REFERENCES votality_usuarios(id) ON DELETE SET NULL,
+                nombre_completo VARCHAR(200) NOT NULL,
+                direccion VARCHAR(250) NOT NULL,
+                coordenadas geometry(Point, 4326) NOT NULL,
+                respuestas_personalizadas JSONB NOT NULL DEFAULT '{}'::jsonb,
+                creado_el TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT unique_campana_coordenadas_pin UNIQUE (campana_id, coordenadas)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_encuesta_coordenadas_gist 
+            ON votality_encuestas USING GIST (coordenadas);
+
+            CREATE INDEX IF NOT EXISTS idx_encuesta_campana_fecha 
+            ON votality_encuestas (campana_id, creado_el);
+
+            CREATE INDEX IF NOT EXISTS idx_encuesta_nombre 
+            ON votality_encuestas (nombre_completo);
+
+            -- Disparador DDL/DML de inmutabilidad estricta
+            CREATE OR REPLACE FUNCTION fn_prevent_encuesta_update()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                RAISE EXCEPTION 'Regla Multi-Tenant Violada: Los registros de encuesta en votality_encuestas son inmutables tras su guardado para auditoría electoral.';
+            END;
+            $$ LANGUAGE plpgsql;
+
+            DROP TRIGGER IF EXISTS trg_encuestas_prevent_update ON votality_encuestas;
+            CREATE TRIGGER trg_encuestas_prevent_update
+            BEFORE UPDATE ON votality_encuestas
+            FOR EACH ROW
+            EXECUTE FUNCTION fn_prevent_encuesta_update();
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql" endDelimiter=";">
+                DROP TRIGGER IF EXISTS trg_encuestas_prevent_update ON votality_encuestas;
+                DROP FUNCTION IF EXISTS fn_prevent_encuesta_update();
+                DROP TABLE IF EXISTS votality_encuestas;
+                DROP TABLE IF EXISTS votality_asignaciones_encuestadores;
+                DROP TABLE IF EXISTS votality_campanas;
+                DROP TABLE IF EXISTS votality_usuarios;
+                DROP TABLE IF EXISTS votality_tipos_planes;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
+
