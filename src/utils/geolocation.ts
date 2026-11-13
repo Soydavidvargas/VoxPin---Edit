@@ -131,40 +131,28 @@ export function obtenerUbicacionExacta(
 
 /**
  * Función para solicitar ubicación de forma explícita al cargar o pulsar capturar
+ * Utiliza el motor de alta precisión satelital (watchPosition + filtro satelital)
  */
 export const solicitarUbicacionGPS = (
-  onSuccess?: (coords: { lat: number; lng: number }) => void,
-  onError?: (err: GeolocationPositionError) => void
+  onSuccess?: (coords: { lat: number; lng: number; accuracy?: number }) => void,
+  onError?: (err: GeolocationPositionError | Error) => void
 ) => {
-  if (!navigator.geolocation) {
-    alert("Tu navegador no soporta geolocalización.");
+  if (typeof window === 'undefined' || !navigator.geolocation) {
+    if (onError) onError(new Error("Tu navegador no soporta geolocalización."));
     return;
   }
 
-  const opciones = {
-    enableHighAccuracy: true,
-    timeout: 10000,
-    maximumAge: 0
-  };
-
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const coords = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      };
-      if (onSuccess) onSuccess(coords);
+  // Delegar al calibrador satelital de alta precisión
+  obtenerUbicacionExacta(
+    (lat, lng, accuracy) => {
+      if (onSuccess) {
+        onSuccess({ lat, lng, accuracy });
+      }
     },
     (err) => {
-      let mensaje = "No se pudo obtener la ubicación.";
-      if (err.code === 1) mensaje = "Debes permitir el acceso a tu ubicación en el navegador para marcar encuestas.";
-      if (err.code === 2) mensaje = "Ubicación no disponible en este dispositivo.";
-      if (err.code === 3) mensaje = "Se agotó el tiempo para obtener la coordenada GPS.";
-      console.warn("Error GPS:", err);
-      alert(mensaje);
+      console.warn("Aviso señal GPS:", err);
       if (onError) onError(err);
-    },
-    opciones
+    }
   );
 };
 

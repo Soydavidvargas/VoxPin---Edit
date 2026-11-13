@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, Users, MapPin, BarChart3, Sparkles, RefreshCw } from 'lucide-react';
+import { X, Check, Users, MapPin, BarChart3, Sparkles, RefreshCw, Clock, Calendar, AlertTriangle } from 'lucide-react';
 import { UserSession } from '../auth/AuthPage';
 
 interface VotalityUpgradeModalProps {
@@ -164,7 +164,7 @@ export const VotalityUpgradeModal: React.FC<VotalityUpgradeModalProps> = ({
             <span className="w-2.5 h-2.5 bg-white rounded-[1px] rotate-45 inline-block shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.7)]" />
             <div>
               <div className="text-[10px] text-[#888888] tracking-widest uppercase mb-0.5">
-                VOTALITY SIG // GESTIÓN DE SUSCRIPCIONES
+                VOTALITY // GESTIÓN DE SUSCRIPCIONES
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-white font-sans tracking-tight">
                 ACTUALIZAR SUSCRIPCIÓN TERRITORIAL
@@ -224,18 +224,27 @@ export const VotalityUpgradeModal: React.FC<VotalityUpgradeModalProps> = ({
                   <div className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
                     {plan.precio}
                   </div>
-                  <div className="text-[11px] text-[#777777] mt-0.5">
+                  <div className="text-[11px] text-[#00FF85] font-mono mt-0.5 font-bold flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-[#00FF85]" />
+                    <span>Vigencia: 6 meses de licencia</span>
+                  </div>
+                  <div className="text-[10px] text-[#777777] mt-0.5">
                     Tarifa completa para toda la campaña
                   </div>
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-[#999999] leading-relaxed mb-6 font-sans">
+                <p className="text-xs text-[#999999] leading-relaxed mb-4 font-sans">
                   {plan.descripcion}
                 </p>
 
                 {/* Specifications List */}
-                <div className="space-y-3.5 text-xs text-[#CCCCCC] pt-2">
+                <div className="space-y-3 text-xs text-[#CCCCCC] pt-2">
+                  <div className="flex items-start gap-2.5">
+                    <Calendar className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+                    <span><strong className="text-white">Duración:</strong> 6 meses de licencia activa.</span>
+                  </div>
+
                   <div className="flex items-start gap-2.5">
                     <Users className="w-4 h-4 text-white shrink-0 mt-0.5" />
                     <span>{plan.limiteEncuestadores}</span>
@@ -259,6 +268,17 @@ export const VotalityUpgradeModal: React.FC<VotalityUpgradeModalProps> = ({
                   <div className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-white shrink-0 mt-0.5" />
                     <span>Sin anuncios publicitarios</span>
+                  </div>
+
+                  {/* Aviso de Expiración y Respaldo por Correo */}
+                  <div className="p-3 bg-[#0d0d0d] border border-[#2b2b2b] rounded-sm text-[11px] font-mono space-y-1 mt-3">
+                    <div className="flex items-center gap-1.5 text-amber-300 font-bold uppercase tracking-wider text-[10px]">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span>AVISO DE VIGENCIA Y RESPALDO</span>
+                    </div>
+                    <p className="text-[#aaaaaa] leading-relaxed text-[10px]">
+                      La licencia dura <strong className="text-white">6 meses</strong>. Antes de <strong className="text-amber-300">15 días</strong> de que se acabe la licencia, se le va a borrar toda la información por seguridad, pero se le enviará en <strong className="text-white">PDF y Excel</strong> al correo la última información guardada.
+                    </p>
                   </div>
                 </div>
               </div>

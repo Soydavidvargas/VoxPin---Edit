@@ -1,14 +1,18 @@
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Users } from 'lucide-react';
 import { EarthGlobe3D } from '../EarthGlobe3D';
 import { useSkeleton } from '../../context/SkeletonContext';
 import { Skeleton, SkeletonBadge } from '../ui/Skeleton';
 
 interface HeroSectionProps {
   onExploreClick: () => void;
+  onOpenInterviewerModal?: () => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreClick }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({
+  onExploreClick,
+  onOpenInterviewerModal,
+}) => {
   const { isSkeleton } = useSkeleton();
 
   return (
@@ -63,14 +67,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreClick }) => {
                   Una plataforma SaaS para mapear opiniones, intención de voto y datos de mercado: <strong className="text-white font-medium">cada persona encuestada es un pin en el mapa</strong>, y cada pin alimenta estadísticas en tiempo real.
                 </p>
 
-                {/* Action Button: Descubrir cómo funciona */}
+                {/* Action Buttons: Mirar planes y Soy encuestador */}
                 <div className="flex flex-wrap items-center gap-4 pt-2">
                   <button
                     onClick={onExploreClick}
-                    className="px-6 py-3.5 rounded-[3.6px] bg-white hover:bg-[#e0e0e0] text-black font-mono text-[13px] font-bold tracking-wider uppercase transition-colors flex items-center gap-2 cursor-pointer"
+                    className="px-6 py-3.5 rounded-[3.6px] bg-white hover:bg-[#e0e0e0] text-black font-mono text-[13px] font-bold tracking-wider uppercase transition-colors flex items-center gap-2 cursor-pointer shadow-sm active:scale-95"
                   >
-                    <span>Descubrir cómo funciona</span>
+                    <span>Mirar planes</span>
                     <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  </button>
+
+                  <button
+                    onClick={onOpenInterviewerModal}
+                    className="px-6 py-3.5 rounded-[3.6px] bg-[#141414] hover:bg-[#1f1f1f] text-white border border-[#3e3e3e] hover:border-[#00FF85] font-mono text-[13px] font-bold tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer shadow-sm group active:scale-95"
+                  >
+                    <Users className="w-4 h-4 text-[#00FF85] group-hover:scale-110 transition-transform" />
+                    <span>Soy encuestador</span>
                   </button>
                 </div>
 

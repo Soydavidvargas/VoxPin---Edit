@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Check, Shield, Users, MapPin, BarChart3, ArrowRight } from 'lucide-react';
+import { X, Check, Shield, Users, MapPin, BarChart3, ArrowRight, Calendar, AlertTriangle, Clock } from 'lucide-react';
 
 export interface CampaignPlanTier {
   id: string;
@@ -86,10 +86,10 @@ export const CampaignPlansModal: React.FC<CampaignPlansModalProps> = ({
             <span className="w-2.5 h-2.5 bg-white rounded-[1px] rotate-45 inline-block shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.7)]" />
             <div>
               <div className="text-[10px] text-[#888888] tracking-widest uppercase mb-0.5">
-                VOTALITY SIG // PLANES POR CAMPAÑA ELECTORAL
+                VOTALITY // PLANES POR CAMPAÑA ELECTORAL
               </div>
               <h2 className="text-xl sm:text-2xl font-normal text-white font-sans tracking-tight">
-                Selecciona tu Nivel Territorial
+                Tarifas y Niveles Territoriales de Campaña
               </h2>
             </div>
           </div>
@@ -103,13 +103,27 @@ export const CampaignPlansModal: React.FC<CampaignPlansModalProps> = ({
           </button>
         </div>
 
-        {/* Informative Subtitle */}
-        <div className="px-6 py-3 bg-[#111111] border-b border-[#1f1f1f] flex flex-wrap items-center justify-between gap-2 text-xs text-[#999999]">
-          <span>
-            Cada perfil incluye aislamiento multi-tenant, enlaces de invitación de un solo uso e inmutabilidad de pines.
+        {/* Justificación Estratégica de Inversión */}
+        <div className="px-6 py-3.5 bg-[#0f0f0f] border-b border-[#222222] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-start gap-2.5">
+            <Shield className="w-4 h-4 text-[#00FF85] shrink-0 mt-0.5" />
+            <div className="text-[#aaaaaa] leading-relaxed">
+              <strong className="text-white uppercase font-mono text-[11px] block sm:inline mr-1">¿Por qué esta inversión estratégica?</strong>
+              Cuesta esta inversión por la <span className="text-white font-medium">información tan inmensa</span> que obtienes en territorio y la ventaja de coordinar <span className="text-white font-medium">socios y encuestadores que te ayudan a encuestar</span> en terreno con funciones casi ilimitadas.
+            </div>
+          </div>
+          <span className="text-white font-bold text-[10px] uppercase tracking-wider bg-[#1c1c1c] border border-[#333333] px-2.5 py-1 rounded-xs shrink-0 font-mono">
+            PAGO ÚNICO · 6 MESES
           </span>
-          <span className="text-white font-bold text-[11px] uppercase tracking-wider">
-            [PAGO ÚNICO POR CAMPAÑA]
+        </div>
+
+        {/* Informative Subtitle */}
+        <div className="px-6 py-2.5 bg-[#0a0a0a] border-b border-[#1f1f1f] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#777777]">
+          <span className="text-[#cccccc]">
+            🔒 <strong className="text-white">PINES 100% PRIVADOS:</strong> Cada cuenta dispone de su plataforma privada y nadie puede ver los pines ajenos (salvo encuestadores con token oficial).
+          </span>
+          <span className="text-[#00FF85] font-bold text-[10px] uppercase tracking-wider">
+            LICENCIA VÁLIDA POR 6 MESES
           </span>
         </div>
 
@@ -146,18 +160,29 @@ export const CampaignPlansModal: React.FC<CampaignPlansModalProps> = ({
                   <div className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
                     {tier.precio}
                   </div>
-                  <div className="text-[11px] text-[#777777] mt-0.5">
+                  <div className="text-[11px] text-[#00FF85] font-mono mt-0.5 font-bold flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-[#00FF85]" />
+                    <span>Duración: 6 meses de licencia</span>
+                  </div>
+                  <div className="text-[10px] text-[#777777] mt-0.5">
                     Tarifa completa para toda la campaña
                   </div>
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-[#999999] leading-relaxed mb-6 font-sans">
+                <p className="text-xs text-[#999999] leading-relaxed mb-4 font-sans">
                   {tier.descripcion}
                 </p>
 
                 {/* Specifications List */}
-                <div className="space-y-3.5 text-xs text-[#CCCCCC] pt-2">
+                <div className="space-y-3 text-xs text-[#CCCCCC] pt-2">
+                  <div className="flex items-start gap-2.5">
+                    <Calendar className="w-4 h-4 text-[#D4AF37] shrink-0 mt-0.5" />
+                    <span>
+                      <strong className="text-white">Vigencia de 6 meses:</strong> Duración de la licencia para toda la campaña.
+                    </span>
+                  </div>
+
                   <div className="flex items-start gap-2.5">
                     <Users className="w-4 h-4 text-white shrink-0 mt-0.5" />
                     <span>
@@ -181,7 +206,18 @@ export const CampaignPlansModal: React.FC<CampaignPlansModalProps> = ({
 
                   <div className="flex items-start gap-2.5 text-[#888888]">
                     <Shield className="w-4 h-4 text-white shrink-0 mt-0.5" />
-                    <span>PostGIS + GPS satelital nativo de alta precisión.</span>
+                    <span>Cartografía satelital + GPS de alta precisión nativo.</span>
+                  </div>
+
+                  {/* Aviso de Expiración y Respaldo por Correo */}
+                  <div className="p-3 bg-[#111111] border border-[#333333] rounded-sm text-[11px] font-mono space-y-1 mt-3">
+                    <div className="flex items-center gap-1.5 text-amber-300 font-bold uppercase tracking-wider text-[10px]">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span>AVISO DE VIGENCIA Y RESPALDO</span>
+                    </div>
+                    <p className="text-[#aaaaaa] leading-relaxed">
+                      La licencia dura <strong className="text-white">6 meses</strong>. Antes de <strong className="text-amber-300">15 días</strong> de que se acabe la licencia, se le va a borrar toda la información por seguridad, pero se le enviará en <strong className="text-white">PDF y Excel</strong> al correo la última información guardada.
+                    </p>
                   </div>
                 </div>
               </div>

@@ -148,9 +148,9 @@ export function registerUserInStore(userData: {
 
   const defaultPlan = {
     codigo: planTier,
-    nombre: planTier === 'FREE' ? 'Plan Gratuito / Básico' : `Campaña ${planTier}`,
-    limite_encuestadores: planTier === 'FREE' ? 0 : planTier === 'MUNICIPAL' ? 50 : planTier === 'DEPARTAMENTAL' ? 200 : 15,
-    limite_pines: planTier === 'FREE' ? 1000 : planTier === 'MUNICIPAL' ? 50000 : planTier === 'DEPARTAMENTAL' ? 250000 : 10000,
+    nombre: planTier === 'FREE' ? 'Plan Gratuito / Básico' : planTier === 'PREMIUM' ? 'Plan Premium' : `Campaña ${planTier}`,
+    limite_encuestadores: planTier === 'FREE' ? 0 : planTier === 'PREMIUM' ? 30 : planTier === 'MUNICIPAL' ? 50 : planTier === 'DEPARTAMENTAL' ? 200 : 15,
+    limite_pines: planTier === 'FREE' ? 100 : planTier === 'PREMIUM' ? 1000 : planTier === 'MUNICIPAL' ? 50000 : planTier === 'DEPARTAMENTAL' ? 250000 : 10000,
   };
 
   const newUser: RegisteredUser = {
@@ -183,6 +183,34 @@ export function updateUserPasswordInStore(email: string, newPassword: string): b
   if (idx === -1) return false;
 
   users[idx].password = newPassword;
+  saveRegisteredUsers(users);
+  return true;
+}
+
+/**
+ * Actualiza el plan y licencias de un usuario individual registrado de manera estrictamente aislada.
+ */
+export function updateUserPlanInStore(
+  email: string,
+  newPlanTier: string,
+  planData?: { codigo: string; nombre: string; limite_encuestadores: number; limite_pines: number }
+): boolean {
+  const cleanEmail = email.trim().toLowerCase();
+  const users = getRegisteredUsers();
+  const idx = users.findIndex((u) => u.email.trim().toLowerCase() === cleanEmail);
+  if (idx === -1) return false;
+
+  users[idx].planTier = newPlanTier;
+  if (planData) {
+    users[idx].plan = planData;
+  } else if (newPlanTier === 'PREMIUM') {
+    users[idx].plan = {
+      codigo: 'PREMIUM',
+      nombre: 'Plan Premium',
+      limite_encuestadores: 30,
+      limite_pines: 1000,
+    };
+  }
   saveRegisteredUsers(users);
   return true;
 }

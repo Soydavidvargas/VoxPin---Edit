@@ -1,12 +1,12 @@
 export type UserRole = 'admin' | 'free' | 'encuestador';
 
-export type AdminPlanTier = 'comunal' | 'municipal' | 'departamental';
+export type AdminPlanTier = 'comunal' | 'municipal' | 'departamental' | 'premium';
 
 export interface PlanLimits {
   tier: AdminPlanTier | 'free';
   name: string;
   maxInterviewers: number;
-  maxPins: number; // 100 for Free, unlimited for paid
+  maxPins: number; // 100 for Free, 1000 for Premium, etc.
   allowStatistics: boolean;
   allowInterviewerManagement: boolean;
   hasAds: boolean;
@@ -21,6 +21,15 @@ export const PLAN_CONFIGS: Record<AdminPlanTier | 'free', PlanLimits> = {
     allowStatistics: true, // Estadísticas básicas con censura de métricas avanzadas
     allowInterviewerManagement: false,
     hasAds: true,
+  },
+  premium: {
+    tier: 'premium',
+    name: 'Plan Premium',
+    maxInterviewers: 30,
+    maxPins: 1000,
+    allowStatistics: true,
+    allowInterviewerManagement: true,
+    hasAds: false,
   },
   comunal: {
     tier: 'comunal',
@@ -71,6 +80,16 @@ export interface FormField {
   isDefault?: boolean; // 'Nombre' and 'Dirección' are locked defaults
 }
 
+export interface RespondentRecord {
+  id: string;
+  name: string;
+  surveyorId: string;
+  surveyorName: string;
+  createdAt: string;
+  answers: Record<string, string | number | boolean>;
+  questionLabels?: Record<string, string>;
+}
+
 export interface SurveyRecord {
   id: string;
   campaignId: string;
@@ -83,6 +102,28 @@ export interface SurveyRecord {
   surveyorName: string;
   createdAt: string;
   censusSector: string;
+  questionLabels?: Record<string, string>;
+  respondents?: RespondentRecord[];
+
+  // Campos de georreferenciación de alta precisión y auditoría SIG
+  fuente?: 'gps' | 'direccion' | 'ajuste_manual' | 'barrio' | 'municipio';
+  nivelPrecision?: 'EXACTA' | 'APROXIMADA' | 'SOLO_MUNICIPIO';
+  locationType?: 'ROOFTOP' | 'RANGE_INTERPOLATED' | 'GEOMETRIC_CENTER' | 'APPROXIMATE';
+  candidatoElegido?: string;
+  puntaje?: number;
+  advertencias?: string[];
+  direccionNormalizada?: string;
+  barrio?: string;
+  municipioCodigoDane?: string;
+  departamento?: string;
+  municipio?: string;
+  auditTrail?: Array<{
+    fecha: string;
+    corregidoPor: string;
+    ubicacionAnterior: { lat: number; lng: number };
+    ubicacionNueva: { lat: number; lng: number };
+    motivo: string;
+  }>;
 }
 
 export interface SearchLocationTarget {

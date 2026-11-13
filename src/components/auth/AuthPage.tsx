@@ -44,6 +44,7 @@ export interface UserSession {
   token?: string;
   projectName?: string;
   proyecto_nombre?: string;
+  adminName?: string;
 }
 
 interface AuthPageProps {
@@ -169,6 +170,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       ? (rolFromUrl.toUpperCase() === 'DIRECTOR_FREE' ? 'USUARIO_FREE' : rolFromUrl.toUpperCase() === 'DIRECTOR_CAMPANA' ? 'ADMIN_CAMPANA' : rolFromUrl.toUpperCase())
       : (finalPlanCode === 'FREE' ? 'USUARIO_FREE' : 'ADMIN_CAMPANA');
 
+    try {
+      localStorage.removeItem('votality_user_plan');
+      localStorage.removeItem('votality_premium_paid');
+      if (finalPlanCode === 'PREMIUM') {
+        localStorage.setItem(`votality_user_plan_${cleanEmail}`, 'PREMIUM');
+      } else {
+        localStorage.removeItem(`votality_user_plan_${cleanEmail}`);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
     setIsLoading(true);
     try {
       const res = await fetch('/api/v1/auth/registro/', {
@@ -217,7 +230,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         if (onRegisterSuccess) {
           onRegisterSuccess(user, selectedPlan);
         } else {
-          if (planTier === 'FREE') {
+          if (planTier === 'FREE' || planTier === 'PREMIUM' || urlParams?.get('pagado') === 'true') {
             window.history.pushState({}, '', '/');
             onLoginSuccess(user);
           } else {
@@ -239,9 +252,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         role: assignedRole,
         plan: {
           codigo: finalPlanCode,
-          nombre: finalPlanCode === 'FREE' ? 'Plan Gratuito / Básico' : `Campaña ${finalPlanCode}`,
-          limite_encuestadores: finalPlanCode === 'FREE' ? 0 : finalPlanCode === 'MUNICIPAL' ? 50 : finalPlanCode === 'DEPARTAMENTAL' ? 200 : 15,
-          limite_pines: finalPlanCode === 'FREE' ? 1000 : finalPlanCode === 'MUNICIPAL' ? 50000 : finalPlanCode === 'DEPARTAMENTAL' ? 250000 : 10000,
+          nombre: finalPlanCode === 'FREE' ? 'Plan Gratuito / Básico' : finalPlanCode === 'PREMIUM' ? 'Plan Premium' : `Campaña ${finalPlanCode}`,
+          limite_encuestadores: finalPlanCode === 'FREE' ? 0 : finalPlanCode === 'PREMIUM' ? 30 : finalPlanCode === 'MUNICIPAL' ? 50 : finalPlanCode === 'DEPARTAMENTAL' ? 200 : 15,
+          limite_pines: finalPlanCode === 'FREE' ? 100 : finalPlanCode === 'PREMIUM' ? 1000 : finalPlanCode === 'MUNICIPAL' ? 50000 : finalPlanCode === 'DEPARTAMENTAL' ? 250000 : 10000,
         },
       });
 
@@ -262,7 +275,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       if (onRegisterSuccess) {
         onRegisterSuccess(user, selectedPlan);
       } else {
-        if (finalPlanCode === 'FREE') {
+        if (finalPlanCode === 'FREE' || finalPlanCode === 'PREMIUM' || urlParams?.get('pagado') === 'true') {
           window.history.pushState({}, '', '/');
           onLoginSuccess(user);
         } else {
@@ -540,7 +553,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           <div className="relative z-10">
             
             {/* Plan Badge (if entering with plan) */}
-            {selectedPlan && (
+            {selectedPlan ? (
               <div className="mb-6 p-4 rounded-[3.6px] bg-[#141414] border border-white font-mono text-xs shadow-md">
                 <div className="flex items-center justify-between text-[10px] text-[#888888] uppercase tracking-wider mb-1.5 pb-1.5 border-b border-[#222222]">
                   <span className="flex items-center gap-1.5 text-white font-bold">
@@ -554,7 +567,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   [{selectedPlan.nivel}] · Hasta {selectedPlan.limiteEncuestadores} encuestadores · {selectedPlan.limitePines.toLocaleString('es-CO')} pines
                 </div>
               </div>
-            )}
+            ) : (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('plan')?.toLowerCase() === 'premium') ? (
+              <div className="mb-6 p-4 rounded-[3.6px] bg-[#141414] border border-[#D4AF37] font-mono text-xs shadow-md">
+                <div className="flex items-center justify-between text-[10px] text-[#888888] uppercase tracking-wider mb-1.5 pb-1.5 border-b border-[#222222]">
+                  <span className="flex items-center gap-1.5 text-[#D4AF37] font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+                    PLAN PREMIUM {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('pagado') === 'true' ? '· PAGO CONFIRMADO' : ''}
+                  </span>
+                  <span className="text-[#D4AF37] font-bold">$350.000 COP / mes</span>
+                </div>
+                <div className="text-sm font-bold text-white font-sans">Suscripción Premium (Profesional)</div>
+                <div className="text-[11px] text-[#cccccc] font-mono mt-1">
+                  Hasta 30 encuestadores · 1.000 pines propios · 100% Sin anuncios · Descarga Excel y PDF
+                </div>
+              </div>
+            ) : null}
 
             {/* Mode Switcher Tabs (Login vs Register) */}
             {(mode === 'login' || mode === 'register') && (

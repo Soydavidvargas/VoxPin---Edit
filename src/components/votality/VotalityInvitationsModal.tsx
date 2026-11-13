@@ -26,7 +26,9 @@ export const VotalityInvitationsModal: React.FC<VotalityInvitationsModalProps> =
   if (!isOpen) return null;
 
   const planLabel =
-    adminTier === 'departamental'
+    adminTier === 'premium'
+      ? 'Plan Premium'
+      : adminTier === 'departamental'
       ? 'Campaña Departamental'
       : adminTier === 'municipal'
       ? 'Campaña Municipal'

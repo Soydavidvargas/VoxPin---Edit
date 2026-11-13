@@ -46,7 +46,7 @@ export const INITIAL_CENSUS_SECTORS: CensusSectorData[] = [
 export const INITIAL_FORM_FIELDS: FormField[] = [
   {
     id: 'nombre',
-    label: 'Nombre Completo',
+    label: 'Nombres y Apellidos',
     type: 'text',
     required: true,
     isDefault: true,

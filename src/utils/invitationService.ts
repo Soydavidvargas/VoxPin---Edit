@@ -62,7 +62,7 @@ export async function generarInvitacion(
   campanaId?: string,
   campanaNombre: string = 'Campaña Comuna 13 - Medellín'
 ): Promise<InvitacionItem> {
-  const token = `vtx_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
+  const token = `vtx_sec_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 11)}_${Math.random().toString(36).substring(2, 11)}`;
   const enlace = `/unirse/${token}`;
 
   const nuevaInvitacion: InvitacionItem = {

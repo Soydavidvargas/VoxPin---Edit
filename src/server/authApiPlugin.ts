@@ -9,10 +9,30 @@ dotenv.config();
 const DATA_DIR = path.resolve(process.cwd(), 'backend', 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const OTP_FILE = path.join(DATA_DIR, 'otp_codes.json');
+const SURVEYS_FILE = path.join(DATA_DIR, 'surveys.json');
 
 // Asegurar existencia del directorio de persistencia
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+function readSurveys(): any[] {
+  try {
+    if (!fs.existsSync(SURVEYS_FILE)) return [];
+    const data = fs.readFileSync(SURVEYS_FILE, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    console.error('[AUTH API] Error al leer surveys.json:', err);
+    return [];
+  }
+}
+
+function saveSurveys(surveys: any[]): void {
+  try {
+    fs.writeFileSync(SURVEYS_FILE, JSON.stringify(surveys, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[AUTH API] Error al guardar surveys.json:', err);
+  }
 }
 
 interface StoredUser {
@@ -626,6 +646,116 @@ Mensaje:  Hola ${user.name || 'Usuario'},
           return sendJsonResponse(res, 200, {
             success: true,
             mensaje: 'Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.',
+          });
+        }
+
+        // =========================================================================
+        // GESTIÓN DE ENCUESTAS (SURVEY RECORDS / PADRÓN DE ENCUESTADOS)
+        // =========================================================================
+
+        // GET /api/v1/surveys/ o /api/surveys/ -> Listar encuestas privadas por cuenta/campaña
+        if (req.method === 'GET' && (url.startsWith('/api/v1/surveys') || url.startsWith('/api/surveys'))) {
+          const list = readSurveys();
+          const parsedUrl = new URL(req.url || '', 'http://localhost');
+          const campaignFilter = parsedUrl.searchParams.get('campaignId') || (req.headers['x-campaign-id'] as string);
+
+          const filtered = campaignFilter
+            ? list.filter((s) => s.campaignId === campaignFilter || (!s.campaignId && campaignFilter === 'camp-votality-2026'))
+            : list;
+
+          return sendJsonResponse(res, 200, {
+            success: true,
+            results: filtered,
+          });
+        }
+
+        // POST /api/v1/surveys/ o /api/surveys/ -> Crear encuesta privada en la campaña correspondiente
+        if (req.method === 'POST' && (url.startsWith('/api/v1/surveys') || url.startsWith('/api/surveys'))) {
+          const body = await parseJsonBody(req);
+          const list = readSurveys();
+          const campaignId = body.campaignId || (req.headers['x-campaign-id'] as string) || 'camp-votality-2026';
+          const newSurvey = {
+            id: body.id || `pin-${Date.now().toString(36)}`,
+            campaignId,
+            name: (body.name || '').trim(),
+            address: (body.address || '').trim(),
+            lat: typeof body.lat === 'number' ? body.lat : parseFloat(body.lat || 0),
+            lng: typeof body.lng === 'number' ? body.lng : parseFloat(body.lng || 0),
+            answers: body.answers || {},
+            surveyorId: body.surveyorId || 'admin-001',
+            surveyorName: body.surveyorName || 'Director de Campaña',
+            censusSector: body.censusSector || '',
+            createdAt: body.createdAt || new Date().toISOString(),
+          };
+
+          list.unshift(newSurvey);
+          saveSurveys(list);
+
+          return sendJsonResponse(res, 201, {
+            success: true,
+            data: newSurvey,
+          });
+        }
+
+        // PUT /api/v1/surveys/:id o /api/surveys/:id -> Actualizar encuesta
+        const updateSurveyMatch = url.match(/^\/api\/(?:v1\/)?surveys\/([^\/]+)\/?$/);
+        if (req.method === 'PUT' && updateSurveyMatch) {
+          const surveyId = updateSurveyMatch[1];
+          const body = await parseJsonBody(req);
+          const list = readSurveys();
+          const idx = list.findIndex((s) => String(s.id) === String(surveyId));
+
+          if (idx === -1) {
+            return sendJsonResponse(res, 404, {
+              success: false,
+              error: 'Encuesta no encontrada en la base de datos.',
+            });
+          }
+
+          const existing = list[idx];
+          const updated = {
+            ...existing,
+            ...body,
+            id: existing.id, // ID inmutable
+            createdAt: existing.createdAt,
+            updatedAt: new Date().toISOString(),
+          };
+
+          // Actualizar answers si vinieron campos base
+          if (body.name) updated.name = body.name.trim();
+          if (body.address) updated.address = body.address.trim();
+          if (body.censusSector !== undefined) updated.censusSector = body.censusSector;
+          if (body.answers) {
+            updated.answers = {
+              ...existing.answers,
+              ...body.answers,
+              nombre: updated.name,
+              direccion: updated.address,
+            };
+          }
+
+          list[idx] = updated;
+          saveSurveys(list);
+
+          return sendJsonResponse(res, 200, {
+            success: true,
+            data: updated,
+            mensaje: 'Encuesta actualizada correctamente.',
+          });
+        }
+
+        // DELETE /api/v1/surveys/:id o /api/surveys/:id -> Eliminar definitivamente de la base de datos
+        if (req.method === 'DELETE' && updateSurveyMatch) {
+          const surveyId = updateSurveyMatch[1];
+          const list = readSurveys();
+          const filtered = list.filter((s) => String(s.id) !== String(surveyId));
+
+          saveSurveys(filtered);
+
+          return sendJsonResponse(res, 200, {
+            success: true,
+            deletedId: surveyId,
+            mensaje: 'Encuesta eliminada permanentemente de la base de datos.',
           });
         }
 

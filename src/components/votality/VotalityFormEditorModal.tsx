@@ -71,8 +71,18 @@ export const VotalityFormEditorModal: React.FC<VotalityFormEditorModalProps> = (
     setLocalFields(localFields.filter((f) => f.id !== id));
   };
 
-  // Guardar esquema en memoria / estado persistente
+  // Guardar esquema en memoria / estado persistente y sincronizar en tiempo real
   const handleSave = () => {
+    try {
+      localStorage.setItem('votality_active_form_fields', JSON.stringify(localFields));
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('votality_form_schema_channel');
+        bc.postMessage({ type: 'SCHEMA_UPDATED', fields: localFields });
+        bc.close();
+      }
+    } catch (err) {
+      console.error('Error al sincronizar esquema:', err);
+    }
     onSaveFields(localFields);
     setHasSaved(true);
     setTimeout(() => {
@@ -114,8 +124,8 @@ export const VotalityFormEditorModal: React.FC<VotalityFormEditorModalProps> = (
               <AlertCircle className="w-4 h-4 text-[#FFFFFF] shrink-0 mt-0.5" />
               <div className="text-[#cccccc] text-[11px] leading-relaxed">
                 Como encuestador, visualizas la plantilla configurada por el Administrador. Los campos{' '}
-                <strong className="text-[#FFFFFF]">Nombre Completo</strong> y{' '}
-                <strong className="text-[#FFFFFF]">Dirección</strong> son obligatorios para el registro en campo.
+                <strong className="text-[#FFFFFF]">Nombres y Apellidos</strong> (Primer Nombre y Primer Apellido obligatorios) y{' '}
+                <strong className="text-[#FFFFFF]">Dirección</strong> son requeridos para el registro en campo.
               </div>
             </div>
           ) : (

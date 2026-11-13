@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { Crosshair, Loader2 } from 'lucide-react';
-import { SearchLocationTarget, SurveyRecord } from '../../types/votality';
+import { SearchLocationTarget, SurveyRecord, FormField, RespondentRecord } from '../../types/votality';
 import { obtenerUbicacionExacta } from '../../utils/geolocation';
 
 interface VotalityMapProps {
@@ -12,9 +12,11 @@ interface VotalityMapProps {
   selectedPinId?: string | null;
   maxPins?: number;
   searchTarget?: SearchLocationTarget | null;
+  formFields?: FormField[];
   onSearchLocationAdjusted?: (lat: number, lng: number) => void;
   onGpsLocated?: (lat: number, lng: number, accuracy?: number) => void;
   onGpsError?: (message: string) => void;
+  onMovePinRequest?: (pin: SurveyRecord) => void;
 }
 
 // Límites territoriales estrictos de Colombia (Zona continental e insular)
@@ -42,70 +44,94 @@ const createSearchIndicatorIcon = (type: string) => {
   });
 };
 
-// Marcador Fijo Inmutable por GPS Nativo (100% no arrastrable)
-const createFixedGpsPinIcon = () => {
+// Marcador de "Mi Ubicación" GPS (Pin distintivo con Corona monocromática dorada/blanca y pulso de radar)
+const createMyLocationCrownPinIcon = () => {
   return L.divIcon({
     className: 'fixed-gps-address-marker',
     html: `
-      <div style="position: relative; width: 40px; height: 52px; display: flex; flex-direction: column; align-items: center; cursor: default; transform: translate(-20px, -46px);">
-        <!-- Sombra en suelo con pulso sutil -->
-        <div style="position: absolute; bottom: 0; width: 18px; height: 6px; background: rgba(0,0,0,0.5); border-radius: 50%; filter: blur(1.5px);"></div>
-        <!-- Pin Monocromático de Alta Precisión Inmutable -->
-        <svg width="36" height="48" viewBox="0 0 34 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 10px rgba(0,0,0,0.85));">
+      <div style="position: relative; width: 48px; height: 60px; display: flex; flex-direction: column; align-items: center; cursor: default; transform: translate(-24px, -52px);">
+        <!-- Anillo de pulso GPS satelital -->
+        <div style="position: absolute; bottom: 0; width: 26px; height: 10px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+        <!-- Sombra en suelo con pulso -->
+        <div style="position: absolute; bottom: 0; width: 22px; height: 8px; background: rgba(0,0,0,0.6); border-radius: 50%; filter: blur(2px);"></div>
+        <!-- Pin Monocromático de Mi Ubicación con Corona -->
+        <svg width="42" height="54" viewBox="0 0 34 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 6px 14px rgba(0,0,0,0.95));">
+          <!-- Cuerpo del Pin con bordes nítidos -->
           <path d="M17 2C8.71573 2 2 8.71573 2 17C2 27.5 17 40 17 40C17 40 32 27.5 32 17C32 8.71573 25.2843 2 17 2Z" 
                 fill="#000000" 
                 stroke="#FFFFFF" 
                 stroke-width="2.5" 
                 stroke-linejoin="round"/>
-          <circle cx="17" cy="17" r="7" 
+          <!-- Círculo interior blanco contrastante -->
+          <circle cx="17" cy="17" r="8.5" 
                   fill="#FFFFFF" 
                   stroke="#000000" 
-                  stroke-width="2"/>
-          <circle cx="17" cy="17" r="2.8" fill="#000000"/>
+                  stroke-width="1.8"/>
+          <!-- Icono de Corona (Crown) en el centro -->
+          <!-- Corona de 5 puntas estilizada y definida -->
+          <path d="M12 21.5H22L21.2 18.2L19.2 19.5L17 13.5L14.8 19.5L12.8 18.2L12 21.5Z" 
+                fill="#000000" 
+                stroke="#000000" 
+                stroke-width="0.8" 
+                stroke-linejoin="round"/>
+          <!-- Gemas / círculos en las puntas de la corona -->
+          <circle cx="12.5" cy="17.8" r="0.9" fill="#000000"/>
+          <circle cx="17" cy="13" r="1.1" fill="#000000"/>
+          <circle cx="21.5" cy="17.8" r="0.9" fill="#000000"/>
         </svg>
       </div>
     `,
-    iconSize: [40, 52],
-    iconAnchor: [20, 48],
-    popupAnchor: [0, -44],
+    iconSize: [48, 60],
+    iconAnchor: [24, 54],
+    popupAnchor: [0, -50],
   });
 };
 
+const createFixedGpsPinIcon = createMyLocationCrownPinIcon;
+
 const createDraggableAddressPinIcon = createFixedGpsPinIcon;
 
-// Strictly Monochromatic SVG Vector Marker
-const createMonochromePinIcon = (isSelected: boolean, index: number) => {
+// Strictly Monochromatic SVG Vector Marker (Tamaño fijo inalterable al hacer zoom)
+const createMonochromePinIcon = (isSelected: boolean, clusterCount: number = 1) => {
+  const isCluster = clusterCount > 1;
   const svg = `
-    <svg width="34" height="46" viewBox="0 0 34 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="26" height="36" viewBox="0 0 26 36" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <filter id="shadow" x="0" y="0" width="34" height="46" filterUnits="userSpaceOnUse">
-          <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.8"/>
+        <filter id="shadow" x="0" y="0" width="26" height="36" filterUnits="userSpaceOnUse">
+          <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.85"/>
         </filter>
       </defs>
       <g filter="url(#shadow)">
-        <path d="M17 2C8.71573 2 2 8.71573 2 17C2 27.5 17 40 17 40C17 40 32 27.5 32 17C32 8.71573 25.2843 2 17 2Z" 
+        <path d="M13 2C6.92487 2 2 6.92487 2 13C2 21 13 32 13 32C13 32 24 21 24 13C24 6.92487 19.0751 2 13 2Z" 
               fill="${isSelected ? '#FFFFFF' : '#000000'}" 
               stroke="${isSelected ? '#000000' : '#FFFFFF'}" 
-              stroke-width="2.5" 
+              stroke-width="2" 
               stroke-linejoin="round"/>
-        <circle cx="17" cy="17" r="6" 
+        <circle cx="13" cy="13" r="${isCluster ? 6.5 : 4.5}" 
                 fill="${isSelected ? '#000000' : '#FFFFFF'}" 
                 stroke="${isSelected ? '#FFFFFF' : '#000000'}" 
-                stroke-width="1.5"/>
+                stroke-width="1.2"/>
+        ${
+          isCluster
+            ? `<text x="13" y="16" text-anchor="middle" font-size="8" font-family="monospace, sans-serif" font-weight="bold" fill="${
+                isSelected ? '#FFFFFF' : '#000000'
+              }">${Math.min(clusterCount, 99)}</text>`
+            : `<circle cx="13" cy="13" r="2" fill="${isSelected ? '#FFFFFF' : '#000000'}"/>`
+        }
       </g>
     </svg>
   `;
 
   return L.divIcon({
-    className: 'monochrome-leaflet-marker',
+    className: 'monochrome-leaflet-marker fixed-zoom-pin',
     html: `
-      <div style="cursor: pointer; transform: translate(-17px, -40px); transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+      <div style="width: 26px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none;">
         ${svg}
       </div>
     `,
-    iconSize: [34, 46],
-    iconAnchor: [17, 42],
-    popupAnchor: [0, -40],
+    iconSize: [26, 36],
+    iconAnchor: [13, 33], // Anclaje milimétrico exacto a la punta inferior del pin
+    popupAnchor: [0, -32],
   });
 };
 
@@ -117,9 +143,11 @@ export const VotalityMap: React.FC<VotalityMapProps> = ({
   selectedPinId,
   maxPins = Infinity,
   searchTarget,
+  formFields,
   onSearchLocationAdjusted,
   onGpsLocated,
   onGpsError,
+  onMovePinRequest,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -145,8 +173,8 @@ export const VotalityMap: React.FC<VotalityMapProps> = ({
             lat >= -4.3 && lat <= 13.5 && lng >= -81.8 && lng <= -66.8;
 
           if (isWithinColombia) {
-            // Centrar el mapa con zoom de calle
-            map.flyTo([lat, lng], 18, { duration: 1.5 });
+            // Centrar el mapa con zoom de alta resolución predial
+            map.flyTo([lat, lng], 19, { duration: 1.2 });
 
             // Colocar el marcador fijo de la encuesta en el punto actual (100% inmutable, no arrastrable)
             let surveyMarker = surveyMarkerRef.current || (window as any).surveyMarker;
@@ -159,7 +187,7 @@ export const VotalityMap: React.FC<VotalityMapProps> = ({
                 zIndexOffset: 1600,
               }).addTo(map);
 
-              surveyMarker.bindTooltip('Pin Fijo: Ubicación GPS Inmutable', {
+              surveyMarker.bindTooltip('👑 Mi Ubicación GPS', {
                 permanent: true,
                 direction: 'top',
                 className: 'votality-drag-tooltip',
@@ -261,7 +289,7 @@ export const VotalityMap: React.FC<VotalityMapProps> = ({
       L.control
         .attribution({
           position: 'bottomleft',
-          prefix: '<span style="font-family: monospace; font-size: 10px; color: #888;">VOTALITY GIS • LEAFLET</span>',
+          prefix: '<span style="font-family: monospace; font-size: 10px; color: #888;">VOTALITY • PLATAFORMA TERRITORIAL</span>',
         })
         .addTo(map);
 
@@ -270,8 +298,7 @@ export const VotalityMap: React.FC<VotalityMapProps> = ({
 
       mapInstanceRef.current = map;
 
-      // 1. AUTO-ENFOQUE POR GPS NATIVO AL CARGAR LA PLATAFORMA (Alta precisión satelital + calibración)
-      locateCurrentPosition(false);
+      // El mapa inicia centrado en Colombia / territorio asignado sin auto-zoom invasivo al GPS personal
     }
 
     return () => {
@@ -284,9 +311,9 @@ export const VotalityMap: React.FC<VotalityMapProps> = ({
 
   // Update center when prop changes
   useEffect(() => {
-    if (mapInstanceRef.current && !searchTarget) {
+    if (mapInstanceRef.current) {
       mapInstanceRef.current.flyTo(center, zoom, {
-        duration: 1.2,
+        duration: 1.0,
       });
     }
   }, [center[0], center[1], zoom]);
@@ -403,62 +430,374 @@ export const VotalityMap: React.FC<VotalityMapProps> = ({
     searchMarkerRef.current = marker;
   }, [searchTarget, onSearchLocationAdjusted]);
 
-  // Update pins on map
+  // Update pins on map con agrupación espacial exacta (no se mueven ni se agrandan con el zoom)
   useEffect(() => {
     if (!mapInstanceRef.current || !markersLayerRef.current) return;
 
     markersLayerRef.current.clearLayers();
 
-    // Limit pins if specified (e.g. 100 for Free Plan)
-    const visiblePins = pins.slice(0, maxPins);
+    // 1. Agrupar encuestas que comparten la misma ubicación geográfica (~3 metros: 4 decimales)
+    const clustersMap = new Map<string, { lat: number; lng: number; records: SurveyRecord[] }>();
 
-    visiblePins.forEach((pin, index) => {
-      const isSelected = pin.id === selectedPinId;
-      const marker = L.marker([pin.lat, pin.lng], {
-        icon: createMonochromePinIcon(isSelected, index),
+    pins.forEach((pin) => {
+      const key = `${pin.lat.toFixed(4)},${pin.lng.toFixed(4)}`;
+      const existing = clustersMap.get(key);
+      if (existing) {
+        existing.records.push(pin);
+      } else {
+        clustersMap.set(key, {
+          lat: pin.lat,
+          lng: pin.lng,
+          records: [pin],
+        });
+      }
+    });
+
+    // 2. Renderizar cada PIN físico acumulado (no aumenta pines disponibles cuando comparten ubicación)
+    Array.from(clustersMap.values()).forEach((cluster) => {
+      const isSelected = cluster.records.some((r) => r.id === selectedPinId);
+      const firstRecord = cluster.records[0];
+
+      // Acumular todos los encuestados que residen o fueron registrados en este mismo PIN
+      const allRespondentsInCluster: RespondentRecord[] = [];
+
+      cluster.records.forEach((rec) => {
+        if (rec.respondents && rec.respondents.length > 0) {
+          rec.respondents.forEach((resp) => {
+            if (!allRespondentsInCluster.some((x) => x.id === resp.id)) {
+              allRespondentsInCluster.push(resp);
+            }
+          });
+        } else {
+          if (!allRespondentsInCluster.some((x) => x.id === rec.id)) {
+            allRespondentsInCluster.push({
+              id: rec.id,
+              name: rec.name,
+              surveyorId: rec.surveyorId || 'surveyor-1',
+              surveyorName: rec.surveyorName,
+              createdAt: rec.createdAt,
+              answers: rec.answers,
+              questionLabels: rec.questionLabels,
+            });
+          }
+        }
       });
 
+      const count = allRespondentsInCluster.length;
+
+      const marker = L.marker([cluster.lat, cluster.lng], {
+        icon: createMonochromePinIcon(isSelected, count),
+        riseOnHover: true,
+      });
+
+      // Construcción del Popup con diseño UI avanzado (Nombre completo, Dpto, Municipio, Hora exacta y Preguntas Personalizadas)
       const popupContent = document.createElement('div');
-      popupContent.className = 'font-sans text-xs bg-black text-white p-3 border border-white/20 shadow-2xl rounded-sm max-w-xs';
-      popupContent.innerHTML = `
-        <div style="font-family: monospace; font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">
-          PIN #${pin.id} • ${pin.censusSector || 'Sector Censal'}
-        </div>
-        <div style="font-weight: 700; font-size: 14px; color: #fff; margin-bottom: 2px;">
-          ${pin.name}
-        </div>
-        <div style="color: #bbb; margin-bottom: 8px;">
-          ${pin.address}
-        </div>
-        <div style="border-top: 1px solid #333; padding-top: 6px; display: flex; flex-direction: column; gap: 4px;">
-          ${Object.entries(pin.answers || {})
-            .map(([key, val]) => `
-              <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 11px;">
-                <span style="color: #777; text-transform: capitalize;">${key.replace('_', ' ')}:</span>
-                <span style="color: #fff; font-weight: 600;">${String(val)}</span>
-              </div>
-            `)
-            .join('')}
-        </div>
-        <div style="margin-top: 8px; font-family: monospace; font-size: 9px; color: #666; border-top: 1px dashed #222; padding-top: 4px;">
-          Encuestador: ${pin.surveyorName} • ${new Date(pin.createdAt).toLocaleDateString()}
+      popupContent.className =
+        'font-sans text-xs bg-black text-white p-3.5 border border-white/30 shadow-[0_12px_36px_rgba(0,0,0,0.95)] rounded-sm max-w-sm max-h-96 overflow-y-auto select-none';
+
+      const dptoPrincipal = firstRecord.departamento || (firstRecord.answers?.departamento as string) || 'Colombia';
+      const muniPrincipal = firstRecord.municipio || (firstRecord.answers?.municipio as string) || firstRecord.censusSector || 'No especificado';
+      const barrioPrincipal = firstRecord.barrio || (firstRecord.answers?.barrio as string) || '';
+
+      const headerHtml = `
+        <div style="border-bottom: 1px solid #262626; padding-bottom: 8px; margin-bottom: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="font-family: monospace; font-size: 10px; font-weight: bold; color: #00FF85; text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 7px; height: 7px; border-radius: 9999px; background: #00FF85; box-shadow: 0 0 6px #00FF85; display: inline-block;"></span>
+              ${count > 1 ? `PIN CON ${count} ENCUESTAS ACUMULADAS` : `PIN REGISTRADO`}
+            </span>
+            <span style="font-family: monospace; font-size: 9px; color: #888; background: #141414; border: 1px solid #262626; padding: 2px 6px; border-radius: 2px;">
+              ${barrioPrincipal ? `BARRIO ${barrioPrincipal.toUpperCase()}` : 'PREDIO'}
+            </span>
+          </div>
+
+          <div style="font-family: monospace; font-size: 12px; font-weight: bold; color: #ffffff; display: flex; align-items: flex-start; gap: 5px; margin-top: 4px;">
+            <span style="color: #ff3366;">📍</span>
+            <span>${firstRecord.address}</span>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-family: monospace; font-size: 10px; color: #aaaaaa; margin-top: 5px; background: #0c0c0c; padding: 5px 8px; border-radius: 2px; border: 1px solid #1f1f1f;">
+            <span style="color: #00FF85;">🏛️</span>
+            <span><strong>Municipio:</strong> <span style="color: #ffffff;">${muniPrincipal}</span></span>
+            <span style="color: #444444;">•</span>
+            <span><strong>Dpto:</strong> <span style="color: #ffffff;">${dptoPrincipal}</span></span>
+          </div>
         </div>
       `;
 
+      // Helper para obtener el Nombre Completo estructurado (Primer Nombre, Segundo Nombre, Apellidos y Alias)
+      const getStructuredFullName = (rec: any): string => {
+        const ans = rec.answers || {};
+        const pNom = ans.primer_nombre || '';
+        const sNom = ans.segundo_nombre || '';
+        const pApe = ans.primer_apellido || '';
+        const sApe = ans.segundo_apellido || '';
+        const alias = ans.alias || '';
+
+        const nameParts = [pNom, sNom, pApe, sApe].map((s) => String(s).trim()).filter(Boolean);
+        if (nameParts.length > 0) {
+          const joined = nameParts.join(' ');
+          return alias ? `${joined} (${alias})` : joined;
+        }
+
+        if (rec.name) {
+          return alias && !rec.name.includes(alias) ? `${rec.name} (${alias})` : rec.name;
+        }
+
+        return 'Persona Encuestada';
+      };
+
+      // Helper estricto para ignorar claves de metadatos del sistema
+      const isSystemMetadataKey = (key: string): boolean => {
+        const clean = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const IGNORED = [
+          'nombre',
+          'primernombre',
+          'segundonombre',
+          'primerapellido',
+          'segundoapellido',
+          'alias',
+          'apodo',
+          'direccion',
+          'direcciondian',
+          'nomenclaturadian',
+          'direccionnormalizada',
+          'departamento',
+          'municipio',
+          'barrio',
+          'sector',
+          'comuna',
+          'complemento',
+          'detalle',
+          'fuenteubicacion',
+          'fuente',
+          'nivelprecision',
+          'precision',
+          'candidatoelegido',
+          'puntaje',
+          'score',
+          'advertencias',
+          'locationtype',
+          'questionlabels',
+          'subsurveys',
+          'respondents',
+        ];
+        return IGNORED.includes(clean);
+      };
+
+      const getQuestionLabelText = (key: string, recAnswers: any, recQuestionLabels?: Record<string, string>) => {
+        const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        // 1. Buscar en formFields
+        const found = formFields?.find((f) => f.id === key || f.id.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanKey);
+        if (found?.label) return found.label;
+
+        // 2. Buscar en questionLabels del registro
+        if (recQuestionLabels?.[key]) return recQuestionLabels[key];
+        if (recQuestionLabels) {
+          for (const [k, v] of Object.entries(recQuestionLabels)) {
+            if (k.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanKey) return v;
+          }
+        }
+
+        // 3. Buscar en questionLabels del primer registro
+        if (firstRecord.questionLabels?.[key]) return firstRecord.questionLabels[key];
+        if (firstRecord.questionLabels) {
+          for (const [k, v] of Object.entries(firstRecord.questionLabels)) {
+            if (k.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanKey) return v;
+          }
+        }
+
+        // 4. Buscar en __question_labels
+        if (recAnswers?.__question_labels?.[key]) return recAnswers.__question_labels[key];
+        if (recAnswers?.__question_labels) {
+          for (const [k, v] of Object.entries(recAnswers.__question_labels as Record<string, string>)) {
+            if (k.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanKey) return v;
+          }
+        }
+
+        // 5. Buscar en localStorage de preguntas activas
+        try {
+          const stored = localStorage.getItem('votality_active_form_fields') || localStorage.getItem('votality_form_fields');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              const matched = parsed.find((f: any) => f.id === key || (f.id && f.id.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanKey));
+              if (matched?.label) return matched.label;
+            }
+          }
+        } catch {}
+
+        if (formFields && formFields.length > 0) {
+          const customOnly = formFields.filter((f) => !f.isDefault && f.id !== 'nombre' && f.id !== 'direccion');
+          if (customOnly.length === 1) return customOnly[0].label;
+        }
+
+        // 6. Si es una clave técnica como custom_179... jamás mostrar el código crudo
+        if (cleanKey.startsWith('custom')) return 'Pregunta Personalizada';
+        return key.replace(/_/g, ' ');
+      };
+
+      const recordsHtml = allRespondentsInCluster
+        .map((rec, i) => {
+          const fullName = getStructuredFullName(rec);
+          const rawDate = rec.createdAt ? new Date(rec.createdAt) : null;
+          const exactTimeStr = rawDate && !isNaN(rawDate.getTime())
+            ? rawDate.toLocaleString('es-CO', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true,
+              })
+            : 'Hora no registrada';
+
+          // Filtrar respuestas personalizadas reales
+          const customQuestions = Object.entries(rec.answers || {}).filter(
+            ([k]) => !isSystemMetadataKey(k)
+          );
+
+          return `
+            <div style="background: #090909; border: 1px solid #242424; border-radius: 4px; padding: 10px; margin-bottom: 9px;">
+              <!-- Nombre Completo de la Persona -->
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #1a1a1a; padding-bottom: 6px; margin-bottom: 7px;">
+                <div style="font-weight: 700; font-size: 13px; color: #ffffff; line-height: 1.2;">
+                  <span style="color: #00FF85; font-family: monospace; margin-right: 4px;">${count > 1 ? `#${i + 1}` : '👤'}</span>
+                  ${fullName}
+                </div>
+                <span style="font-size: 9px; font-family: monospace; color: #00FF85; background: rgba(0,255,133,0.08); border: 1px solid rgba(0,255,133,0.3); padding: 1px 5px; border-radius: 2px; white-space: nowrap;">
+                  ✓ Verificado
+                </span>
+              </div>
+
+              <!-- Fecha y Hora Exacta de Registro + Encuestador -->
+              <div style="font-family: monospace; font-size: 10px; color: #888888; display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <span>🕒</span>
+                  <span><strong>Hora de registro:</strong> <span style="color: #ffffff; font-weight: bold;">${exactTimeStr}</span></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <span>👤</span>
+                  <span><strong>Encuestador:</strong> <span style="color: #cccccc;">${rec.surveyorName}</span></span>
+                </div>
+              </div>
+
+              <!-- Preguntas Personalizadas y Respuestas -->
+              <div style="margin-top: 6px; border-top: 1px dashed #202020; padding-top: 6px;">
+                <div style="font-family: monospace; font-size: 9px; font-weight: bold; color: #aaaaaa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px;">
+                  📋 Preguntas Personalizadas (${customQuestions.length}):
+                </div>
+
+                ${
+                  customQuestions.length === 0
+                    ? `<div style="font-family: monospace; font-size: 10px; color: #666666; font-style: italic;">
+                        Formulario base diligenciado (sin preguntas adicionales).
+                      </div>`
+                    : customQuestions
+                        .map(([k, v]) => {
+                          const qTitle = getQuestionLabelText(k, rec.answers, rec.questionLabels);
+                          const formattedVal = typeof v === 'boolean' ? (v ? 'Sí / Afirmativo' : 'No / Negativo') : String(v);
+                          return `
+                            <div style="background: #111111; border: 1px solid #1f1f1f; border-left: 2.5px solid #00FF85; border-radius: 2px; padding: 5px 8px; margin-bottom: 4px;">
+                              <div style="font-family: monospace; font-size: 10px; font-weight: bold; color: #00FF85; text-transform: uppercase;">
+                                ? ${qTitle}
+                              </div>
+                              <div style="font-size: 11px; font-weight: 600; color: #ffffff; margin-top: 2px;">
+                                ${formattedVal}
+                              </div>
+                            </div>
+                          `;
+                        })
+                        .join('')
+                }
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+
+      const moveButtonHtml = `
+        <div style="margin-top: 8px; border-top: 1px solid #262626; padding-top: 8px; display: flex; gap: 6px;">
+          <button id="btn-mover-pin-${firstRecord.id}" style="flex: 1; background: #f59e0b; color: #000000; font-family: monospace; font-size: 10px; font-weight: bold; text-transform: uppercase; padding: 7px 10px; border: none; border-radius: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s;">
+            ⇄ Mover Pin
+          </button>
+          <button id="btn-detalle-pin-${firstRecord.id}" style="flex: 1; background: #ffffff; color: #000000; font-family: monospace; font-size: 10px; font-weight: bold; text-transform: uppercase; padding: 7px 10px; border: none; border-radius: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s;">
+            Ver Panel
+          </button>
+        </div>
+      `;
+
+      popupContent.innerHTML = `${headerHtml}<div>${recordsHtml}</div>${moveButtonHtml}`;
+
       marker.bindPopup(popupContent, {
-        closeButton: false,
+        closeButton: true,
         className: 'votality-monochrome-popup',
+        autoPan: false,
+      });
+
+      marker.on('popupopen', () => {
+        const btnMove = document.getElementById(`btn-mover-pin-${firstRecord.id}`);
+        if (btnMove) {
+          btnMove.onclick = () => {
+            marker.closePopup();
+            if (onMovePinRequest) {
+              onMovePinRequest(firstRecord);
+            }
+          };
+        }
+
+        const btnDetail = document.getElementById(`btn-detalle-pin-${firstRecord.id}`);
+        if (btnDetail) {
+          btnDetail.onclick = () => {
+            marker.closePopup();
+            if (onPinSelect) {
+              onPinSelect({
+                ...firstRecord,
+                respondents: allRespondentsInCluster,
+              });
+            }
+          };
+        }
       });
 
       marker.on('click', () => {
+        // Dirigir la cámara directamente a las coordenadas de ESE pin (no a mi ubicación)
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo([cluster.lat, cluster.lng], 18, { duration: 0.8 });
+        }
         if (onPinSelect) {
-          onPinSelect(pin);
+          onPinSelect({
+            ...firstRecord,
+            respondents: allRespondentsInCluster,
+          });
         }
       });
 
       markersLayerRef.current?.addLayer(marker);
     });
   }, [pins, selectedPinId, maxPins]);
+
+  // Centrar cámara y desplegar popup automáticamente cuando se selecciona un pin específico (ej. al guardar o desde el padrón)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !selectedPinId) return;
+    const targetPin = pins.find((p) => p.id === selectedPinId);
+    if (targetPin) {
+      mapInstanceRef.current.flyTo([targetPin.lat, targetPin.lng], 18, { duration: 0.8 });
+      markersLayerRef.current?.eachLayer((layer: any) => {
+        if (layer.getLatLng && layer.openPopup) {
+          const pos = layer.getLatLng();
+          if (
+            Math.abs(pos.lat - targetPin.lat) < 0.0001 &&
+            Math.abs(pos.lng - targetPin.lng) < 0.0001
+          ) {
+            layer.openPopup();
+          }
+        }
+      });
+    }
+  }, [selectedPinId]);
 
   return (
     <div className="relative w-full h-full overflow-hidden select-none">

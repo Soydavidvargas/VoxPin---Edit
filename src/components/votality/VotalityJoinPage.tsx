@@ -159,7 +159,7 @@ export const VotalityJoinPage: React.FC<VotalityJoinPageProps> = ({
         {/* Top Minimal Branding */}
         <div className="mb-8 flex items-center gap-2 text-xs font-mono text-[#666666] uppercase tracking-widest">
           <span className="w-2 h-2 rounded-full bg-[#FFFFFF]"></span>
-          <span>VOTALITY SIG • PROTOCOLO DE SEGURIDAD</span>
+          <span>VOTALITY • PROTOCOLO DE SEGURIDAD</span>
         </div>
 
         {/* Card Monocromática de Enlace Expirado */}
@@ -213,7 +213,7 @@ export const VotalityJoinPage: React.FC<VotalityJoinPageProps> = ({
       {/* Top Branding */}
       <div className="mb-6 flex items-center gap-2 text-xs font-mono text-[#888888] uppercase tracking-widest">
         <span className="w-2 h-2 rounded-full bg-[#FFFFFF] animate-pulse"></span>
-        <span>VOTALITY SIG • ACCESO DE ENCUESTADOR EN CAMPO</span>
+        <span>VOTALITY • ACCESO DE ENCUESTADOR EN CAMPO</span>
       </div>
 
       <div className="max-w-md w-full bg-[#0a0a0a] border border-[#262626] rounded-sm p-8 sm:p-10 shadow-[0_8px_30px_rgba(0,0,0,0.8)] animate-in fade-in duration-300">

@@ -1,5 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ScrollReveal } from '../ui/ScrollReveal';
+import { FileText, ShieldCheck, ExternalLink } from 'lucide-react';
 
 export const LandingFooter: React.FC = () => {
   return (
@@ -22,6 +24,18 @@ export const LandingFooter: React.FC = () => {
               <p className="text-xs text-[#8a8a8a] leading-[1.6] max-w-sm font-mono">
                 // Plataforma SaaS para mapear opiniones, intención de voto y datos de mercado: cada persona encuestada es un pin en el mapa, y cada pin alimenta estadísticas en tiempo real.
               </p>
+
+              {/* Botón Destacado: Términos y Condiciones */}
+              <div className="pt-2">
+                <Link
+                  to="/terminos"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#141414] hover:bg-white hover:text-black text-white text-xs font-mono font-bold uppercase tracking-wider rounded-sm border border-[#333333] hover:border-white transition-all cursor-pointer shadow-sm group"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#00FF85] group-hover:text-black transition-colors" />
+                  <span>Términos y condiciones</span>
+                  <ExternalLink className="w-3 h-3 text-[#777777] group-hover:text-black transition-colors" />
+                </Link>
+              </div>
             </div>
 
             {/* Architecture & Navigation Links */}
@@ -30,12 +44,15 @@ export const LandingFooter: React.FC = () => {
                 PLATAFORMA // PASOS
               </div>
               <ul className="space-y-1.5 text-[#8a8a8a]">
-                <li><a href="#flujo" className="hover:text-white transition-colors">• El Flujo de Trabajo</a></li>
-                <li><a href="#modulos" className="hover:text-white transition-colors">• Paso 1: Crear Encuestas</a></li>
-                <li><a href="#modulos" className="hover:text-white transition-colors">• Paso 2: Marcar PIN (Dirección/Mapa)</a></li>
-                <li><a href="#modulos" className="hover:text-white transition-colors">• Paso 3: Cruce vs. Habitantes</a></li>
-                <li><a href="#modulos" className="hover:text-white transition-colors">• Paso 4: Estadísticas & Reportes</a></li>
+                <li><a href="#flujo" className="hover:text-white transition-colors">• Flujo Metodológico</a></li>
+                <li><a href="#videos-oficiales" className="hover:text-white transition-colors">• Demostración en Video</a></li>
                 <li><a href="#planes" className="hover:text-white transition-colors">• Planes y Suscripciones</a></li>
+                <li>
+                  <Link to="/terminos" className="hover:text-white text-[#aaaaaa] font-semibold transition-colors flex items-center gap-1.5 pt-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#00FF85]" />
+                    <span>Términos y condiciones</span>
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -63,6 +80,28 @@ export const LandingFooter: React.FC = () => {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8a8a8a]">
           <div>
             © {new Date().getFullYear()} VOTALITY // SISTEMA GEOESPACIAL NEUTRAL.
+          </div>
+          <div className="flex items-center gap-4 text-[11px]">
+            <Link
+              to="/terminos"
+              className="text-[#aaaaaa] hover:text-white transition-colors underline underline-offset-4"
+            >
+              Términos y condiciones
+            </Link>
+            <span className="text-[#444444]">|</span>
+            <Link
+              to="/terminos"
+              className="text-[#aaaaaa] hover:text-white transition-colors"
+            >
+              Políticas de Suscripciones (6 meses)
+            </Link>
+            <span className="text-[#444444]">|</span>
+            <Link
+              to="/terminos"
+              className="text-[#aaaaaa] hover:text-white transition-colors"
+            >
+              Habeas Data & Privacidad
+            </Link>
           </div>
         </div>
 
