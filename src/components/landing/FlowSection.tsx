@@ -24,7 +24,7 @@ export const FlowSection: React.FC = () => {
     {
       num: '02',
       title: 'Pin en el mapa',
-      tag: 'GIS // CLUSTERING',
+      tag: 'MAPEO // AGRUPACIÓN',
       desc: 'Cada encuestado se posiciona como un pin. Si varias personas viven en la misma dirección, se reúnen en un solo pin interactivo.',
       icon: MapPin,
       badge: 'TIEMPO REAL',
@@ -125,15 +125,41 @@ export const FlowSection: React.FC = () => {
           ) : (
             steps.map((step, idx) => {
               const Icon = step.icon;
+              const stepImages = [
+                '/assets/images/landing-mobile-field.webp',
+                '/assets/images/landing-gis-map.webp',
+                '/assets/images/landing-territory-cluster.webp',
+                '/assets/images/landing-analytics-dashboard.webp',
+              ];
               return (
                 <ScrollReveal
                   key={step.num}
                   delay={idx * 120}
                   className="h-full"
                 >
-                  <div className="relative rounded-[3.6px] bg-[#141414] border border-[#2e2e2e] p-6 hover:border-white transition-colors flex flex-col justify-between h-full">
+                  <div className="relative rounded-[3.6px] bg-[#141414] border border-[#2e2e2e] p-5 hover:border-white transition-colors flex flex-col justify-between h-full group">
                     <div>
-                      <div className="flex items-center justify-between mb-6">
+                      {/* Imagen optimizada en formato WebP con Lazy Loading nativo */}
+                      <div className="relative overflow-hidden rounded-[3px] border border-[#2a2a2a] mb-4 aspect-video bg-[#0d0d0d]">
+                        <picture>
+                          <source srcSet={stepImages[idx]} type="image/webp" />
+                          <img
+                            src={stepImages[idx]}
+                            alt={step.title}
+                            loading="lazy"
+                            decoding="async"
+                            width="400"
+                            height="225"
+                            className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500 opacity-80 group-hover:opacity-100"
+                          />
+                        </picture>
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent pointer-events-none" />
+                        <span className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded-[2px] bg-black/80 border border-white/20 font-mono text-[9px] text-[#cccccc] uppercase">
+                          FASE 0{idx + 1} // WEBP
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between mb-3">
                         <span className="font-mono text-2xl font-light text-white">
                           {step.num}
                         </span>
@@ -146,7 +172,7 @@ export const FlowSection: React.FC = () => {
                         {step.title}
                       </h3>
                       
-                      <div className="font-mono text-[11px] text-[#d4d4d4] uppercase tracking-wider mb-4">
+                      <div className="font-mono text-[11px] text-[#d4d4d4] uppercase tracking-wider mb-3">
                         {step.tag}
                       </div>
 
@@ -155,9 +181,9 @@ export const FlowSection: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="pt-6 mt-6 border-t border-[#2e2e2e] flex items-center justify-between font-mono text-[11px] text-[#8a8a8a]">
+                    <div className="pt-5 mt-5 border-t border-[#2e2e2e] flex items-center justify-between font-mono text-[11px] text-[#8a8a8a]">
                       <span>FASE {step.num}</span>
-                      <Icon className="w-4 h-4 text-[#8a8a8a]" />
+                      <Icon className="w-4 h-4 text-[#8a8a8a] group-hover:text-emerald-400 transition-colors" />
                     </div>
                   </div>
                 </ScrollReveal>

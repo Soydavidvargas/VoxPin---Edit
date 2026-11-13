@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="003-create-surveys-spatial-table" author="votality-architect">
+        <comment>Creación de tabla espacial de encuestas con columna de geometría Point(4326) e inmutabilidad</comment>
+        
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE TABLE votality_surveys (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                campaign_id UUID NOT NULL REFERENCES votality_campaigns(id) ON DELETE RESTRICT,
+                census_sector_id VARCHAR(50) REFERENCES votality_census_sectors(id) ON DELETE SET NULL,
+                surveyor_id UUID NOT NULL REFERENCES votality_users(id) ON DELETE RESTRICT,
+                respondent_name VARCHAR(200) NOT NULL,
+                residential_address VARCHAR(300) NOT NULL,
+                location geometry(Point, 4326) NOT NULL,
+                answers JSONB NOT NULL DEFAULT '{}'::jsonb,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+        </sql>
+
+        <rollback>
+            <dropTable tableName="votality_surveys"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
+

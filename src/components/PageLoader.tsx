@@ -142,7 +142,7 @@ export const PageLoader: React.FC<PageLoaderProps> = ({
       className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700 ease-in-out ${
         isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
-      aria-label="Cargando VoxPin..."
+      aria-label="Cargando Votality..."
     >
       <style>{`
         @keyframes diamondSpinY {
@@ -172,7 +172,7 @@ export const PageLoader: React.FC<PageLoaderProps> = ({
         className="absolute inset-0 w-full h-full block pointer-events-none"
       />
 
-      {/* Center Logo: Spinning Solid White Diamond + VoxPin with white glow */}
+      {/* Center Logo: Spinning Solid White Diamond + Votality with white glow */}
       <div 
         className="relative z-10 flex items-center justify-center gap-4 sm:gap-6 md:gap-7 select-none px-4"
         style={{
@@ -189,10 +189,10 @@ export const PageLoader: React.FC<PageLoaderProps> = ({
           </svg>
         </div>
 
-        {/* VoxPin Typography */}
+        {/* Votality Typography */}
         <div className="relative flex items-center">
           <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black font-sans text-white tracking-[0.02em] leading-none">
-            VoxPin
+            Votality
           </h1>
         </div>
       </div>

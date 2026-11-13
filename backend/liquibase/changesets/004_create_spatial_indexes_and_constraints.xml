@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="004-spatial-indexes-and-uniqueness" author="votality-architect">
+        <comment>Creación de índice espacial GiST, restricción de unicidad de Pin y disparador de inmutabilidad</comment>
+
+        <!-- 1. Índice espacial GIST para consultas GeoJSON y PostGREST de alta velocidad -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE INDEX idx_votality_surveys_location_gist 
+            ON votality_surveys USING GIST (location);
+        </sql>
+
+        <!-- 2. Regla 4.1: Restricción de Unicidad de Pin por Campaña -->
+        <sql dbms="postgresql" endDelimiter=";">
+            ALTER TABLE votality_surveys 
+            ADD CONSTRAINT uq_campaign_pin_location 
+            UNIQUE (campaign_id, location);
+        </sql>
+
+        <!-- 3. Índice para ordenamiento alfabético A-Z y búsqueda rápida por nombre -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE INDEX idx_votality_surveys_respondent_name_az 
+            ON votality_surveys (respondent_name ASC);
+        </sql>
+
+        <!-- 4. Regla 4.2: Disparador DDL/DML de Inmutabilidad Estricta a Nivel de Base de Datos -->
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE OR REPLACE FUNCTION fn_prevent_survey_update()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                RAISE EXCEPTION 'Regla 4.2 Violada: Los registros en votality_surveys son inmutables tras su guardado para garantizar la auditoría electoral.';
+            END;
+            $$ LANGUAGE plpgsql;
+
+            CREATE TRIGGER trg_surveys_prevent_update
+            BEFORE UPDATE ON votality_surveys
+            FOR EACH ROW
+            EXECUTE FUNCTION fn_prevent_survey_update();
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql" endDelimiter=";">
+                DROP TRIGGER IF EXISTS trg_surveys_prevent_update ON votality_surveys;
+                DROP FUNCTION IF EXISTS fn_prevent_survey_update();
+                ALTER TABLE votality_surveys DROP CONSTRAINT IF EXISTS uq_campaign_pin_location;
+                DROP INDEX IF EXISTS idx_votality_surveys_location_gist;
+                DROP INDEX IF EXISTS idx_votality_surveys_respondent_name_az;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
+

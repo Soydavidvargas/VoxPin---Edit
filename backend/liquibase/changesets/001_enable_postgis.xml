@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="001-enable-postgis-extension" author="votality-architect">
+        <comment>Habilitar extensión espacial PostGIS para geometrías y cálculos geodésicos WGS84</comment>
+        <sql dbms="postgresql" endDelimiter=";">
+            CREATE EXTENSION IF NOT EXISTS postgis;
+        </sql>
+        <rollback>
+            DROP EXTENSION IF EXISTS postgis CASCADE;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
+

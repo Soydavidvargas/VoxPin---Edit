@@ -3,15 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Voxpin - Plataforma de Encuestas Geolocalizadas</title>
+    <title>Votality - Plataforma de Encuestas Geolocalizadas</title>
     <meta name="description" content="Plataforma SaaS para mapear opiniones, intención de voto y datos de mercado con geolocalización de pines, clustering familiar, personalización dinámica y dashboard en tiempo real." />
-    <meta property="og:title" content="Voxpin - Plataforma de Encuestas Geolocalizadas" />
+    <meta property="og:title" content="Votality - Plataforma de Encuestas Geolocalizadas" />
     <meta property="og:description" content="Plataforma SaaS para mapear opiniones, intención de voto y datos de mercado con geolocalización de pines, clustering familiar, personalización dinámica y dashboard en tiempo real." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- DNS Prefetch y Preconnect para CDNs y Fuentes -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="https://unpkg.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Fuentes Optimizadas: Limitando grosores estrictos (400, 600, 700) y font-display=swap -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Hoja de Estilos Leaflet cargada con prioridad no bloqueante -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   </head>
   <body class="bg-[#0a0a0a] text-[#ffffff] font-sans antialiased selection:bg-[#ffffff] selection:text-[#000000] min-h-screen">

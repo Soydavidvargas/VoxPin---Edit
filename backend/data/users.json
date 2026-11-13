@@ -1,0 +1,104 @@
+[
+  {
+    "id": "usr_superadmin_willin",
+    "name": "Willin Thomas",
+    "email": "willinthomas@gmail.con",
+    "password": "Votalyty05",
+    "phone": "+573000000000",
+    "role": "SUPERADMIN",
+    "planTier": "DEPARTAMENTAL",
+    "plan": {
+      "codigo": "DEPARTAMENTAL",
+      "nombre": "Campaña Departamental (Acceso Total)",
+      "limite_encuestadores": 999999,
+      "limite_pines": 999999
+    },
+    "campana_id": "camp_master_departamental",
+    "createdAt": "2026-11-11T00:00:00.000Z"
+  },
+  {
+    "id": "usr_superadmin_willin_com",
+    "name": "Willin Thomas",
+    "email": "willinthomas@gmail.com",
+    "password": "Votalyty05",
+    "phone": "+573000000000",
+    "role": "SUPERADMIN",
+    "planTier": "DEPARTAMENTAL",
+    "plan": {
+      "codigo": "DEPARTAMENTAL",
+      "nombre": "Campaña Departamental (Acceso Total)",
+      "limite_encuestadores": 999999,
+      "limite_pines": 999999
+    },
+    "campana_id": "camp_master_departamental",
+    "createdAt": "2026-11-11T00:00:00.000Z"
+  },
+  {
+    "id": "usr_1794373910097_j7ipw",
+    "name": "willian steban gonzalez cortes",
+    "email": "willianstebangonzalezcortes@gmail.com",
+    "password": "WG1079176238",
+    "phone": "",
+    "role": "ADMIN_CAMPANA",
+    "planTier": "COMUNAL",
+    "plan": {
+      "codigo": "COMUNAL",
+      "nombre": "Campaña Comunal",
+      "limite_encuestadores": 15,
+      "limite_pines": 10000
+    },
+    "campana_id": "camp_1794376006015",
+    "createdAt": "2026-11-11T05:11:50.097Z"
+  },
+  {
+    "id": "usr_1794528599096_blxsz",
+    "name": "Juan David Parada Vargas",
+    "email": "juandavidparadavargas30@gmail.com",
+    "password": "davinchigamer120",
+    "phone": "",
+    "role": "ADMIN_CAMPANA",
+    "planTier": "MUNICIPAL",
+    "plan": {
+      "codigo": "MUNICIPAL",
+      "nombre": "Campaña MUNICIPAL",
+      "limite_encuestadores": 50,
+      "limite_pines": 50000
+    },
+    "campana_id": "camp_1794528599096",
+    "createdAt": "2026-11-13T00:09:59.096Z"
+  },
+  {
+    "id": "usr_1794555513180_vhulz",
+    "name": "Porquesi",
+    "email": "sisisi@gmail.com",
+    "password": "davinchigamer120",
+    "phone": "",
+    "role": "USUARIO_FREE",
+    "planTier": "FREE",
+    "plan": {
+      "codigo": "FREE",
+      "nombre": "Plan Gratuito / Básico",
+      "limite_encuestadores": 0,
+      "limite_pines": 1000
+    },
+    "campana_id": null,
+    "createdAt": "2026-11-13T07:38:33.180Z"
+  },
+  {
+    "id": "usr_1794559397156_804vm",
+    "name": "dsadsa",
+    "email": "asdasdas@gmail.com",
+    "password": "holasi",
+    "phone": "",
+    "role": "USUARIO_FREE",
+    "planTier": "FREE",
+    "plan": {
+      "codigo": "FREE",
+      "nombre": "Plan Gratuito / Básico",
+      "limite_encuestadores": 0,
+      "limite_pines": 1000
+    },
+    "campana_id": null,
+    "createdAt": "2026-11-13T08:43:17.156Z"
+  }
+]

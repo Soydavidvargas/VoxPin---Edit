@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <preConditions>
+        <dbms type="postgresql" />
+    </preConditions>
+
+    <!-- 1. Habilitar extensión PostGIS -->
+    <include file="changesets/001_enable_postgis.xml" relativeToChangelogFile="true"/>
+
+    <!-- 2. Entidades de Usuarios, Campañas y Sectores Censales -->
+    <include file="changesets/002_create_campaigns_and_users.xml" relativeToChangelogFile="true"/>
+
+    <!-- 3. Tabla espacial de Encuestas con Point(geometry, 4326) -->
+    <include file="changesets/003_create_surveys_spatial_table.xml" relativeToChangelogFile="true"/>
+
+    <!-- 4. Índices espaciales GIST y Restricciones de Unicidad estricta -->
+    <include file="changesets/004_create_spatial_indexes_and_constraints.xml" relativeToChangelogFile="true"/>
+
+    <!-- 5. Datos Cartográficos de Colombia, Localidades, Comunas, Malla Vial y Barrios -->
+    <include file="changesets/005_create_colombia_geodata_tables_and_indexes.xml" relativeToChangelogFile="true"/>
+
+    <!-- 6. Arquitectura Multi-Tenant por Alcance Territorial (Usuario, TipoPlan, Campana, AsignacionEncuestador, Encuesta) -->
+    <include file="changesets/006_create_multi_tenant_territorial_campaign_tables.xml" relativeToChangelogFile="true"/>
+
+    <!-- 7. Control de Enlaces de Invitación de Un Solo Uso (Single-Use Tokens) -->
+    <include file="changesets/007_create_invitaciones_single_use_table.xml" relativeToChangelogFile="true"/>
+
+    <!-- 8. Códigos de Verificación SMS OTP de 6 Dígitos -->
+    <include file="changesets/008_create_codigos_sms_table.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>
+
