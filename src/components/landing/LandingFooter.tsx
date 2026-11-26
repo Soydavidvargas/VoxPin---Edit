@@ -71,7 +71,7 @@ export const LandingFooter: React.FC = () => {
         {/* Sub-footer */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8a8a8a]">
           <div>
-            © {new Date().getFullYear()} VOXPIN // SISTEMA GEOESPACIAL NEUTRAL.
+            © {new Date().getFullYear()} Votality // SISTEMA GEOESPACIAL NEUTRAL.
           </div>
 
           <div className="flex items-center gap-2">
