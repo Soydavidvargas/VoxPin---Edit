@@ -20,7 +20,7 @@ export const LandingFooter: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-white rounded-[1px] rotate-45 inline-block" />
                 <span className="text-xl font-bold tracking-[-0.03em] text-white font-sans uppercase">
-                  Voxpin
+                  Votality
                 </span>
               </div>
 
